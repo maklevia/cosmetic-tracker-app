@@ -8,21 +8,22 @@ import {
   View
 } from "react-native";
 import { VStack } from "@/components/ui/vstack";
+import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { Input, InputField, InputSlot } from "@/components/ui/input";
 import { Button, ButtonText } from "@/components/ui/button";
 import { 
   FormControl, 
   FormControlLabel, 
-  FormControlLabelText,
-  FormControlError,
-  FormControlErrorIcon,
-  FormControlErrorText
+  FormControlLabelText, 
+  FormControlError, 
+  FormControlErrorIcon, 
+  FormControlErrorText 
 } from "@/components/ui/form-control";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Header from "./components/Header";
-import authService from "@/api/services/authService";
+import userService from "@/api/services/userService";
 import { getUser } from "@/utils/storage";
 
 export const ChangePassword = () => {
@@ -65,7 +66,7 @@ export const ChangePassword = () => {
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
       try {
-        await authService.resetPassword(user.email, newPassword);
+        await userService.changePassword(oldPassword, newPassword);
         
         Alert.alert(
           "Success", 
@@ -73,8 +74,13 @@ export const ChangePassword = () => {
           [{ text: "OK", onPress: () => router.back() }]
         );
       } catch (error: any) {
-        console.error("Failed to change password:", error);
-        Alert.alert("Error", error.response?.data?.message || "Failed to change password");
+        console.log("Change component handled error:", error.message);
+        
+        if (error.response?.data?.message === "Incorrect current password") {
+            setErrors({ old: "Current password is incorrect" });
+        } else {
+            Alert.alert("Error", error.response?.data?.message || "Failed to change password");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +88,7 @@ export const ChangePassword = () => {
   };
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-brand-pink-50"
     >

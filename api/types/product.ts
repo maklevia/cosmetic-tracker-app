@@ -14,6 +14,13 @@ export interface Product {
     id: number;
     url: string;
   };
+  reviews?: Array<{
+    id: number;
+    userId: number;
+    textReview: string;
+    scoreReview: number;
+    createdAt: string;
+  }>;
 }
 
 export interface CreateProductDto {

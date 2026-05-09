@@ -14,6 +14,7 @@ import productService from "@/api/services/productService";
 import imageService from "@/api/services/imageService";
 import { getFullImageUrl } from "@/api/apiClient";
 import { getDisplayData } from "@/utils/display";
+import { getUser } from "@/utils/storage";
 
 interface EditProductProps {
   product: Product;
@@ -104,6 +105,8 @@ export const EditProduct = ({ product, collectionItem }: EditProductProps) => {
     });
   };
 
+  const currentUser = getUser();
+  const userReview = product.reviews?.find(r => r.userId === currentUser?.id);
   const canEditProduct = product.sourceStatus === SourceStatus.ADDED_MANUALLY;
 
   return (
@@ -158,6 +161,7 @@ export const EditProduct = ({ product, collectionItem }: EditProductProps) => {
           onValueChange={(val) => setFormData(prev => ({ ...prev, pao: val }))}
         />
         
+        {/* Review Button */}
         <TouchableOpacity 
           className="mt-8 mx-6 bg-white border border-brand-pink-100 p-4 rounded-2xl flex-row items-center justify-between"
           onPress={handleAddReview}
@@ -165,7 +169,7 @@ export const EditProduct = ({ product, collectionItem }: EditProductProps) => {
           <View className="flex-row items-center">
             <Ionicons name="star-outline" size={20} color="#831843" />
             <Text className="text-brand-pink-900 font-bold ml-2">
-              Add Review
+              {userReview ? "Edit Review" : "Add Review"}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#83184340" />

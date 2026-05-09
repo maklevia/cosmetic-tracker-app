@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { View, FlatList, useWindowDimensions, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { CollectionTabHeader } from "./components/CollectionTabHeader";
 import { CollectionTabs } from "./components/CollectionTabs";
 import GlobalHeader from "../GlobalHeader/GlobalHeader";
@@ -24,15 +24,29 @@ export const CollectionScreen = () => {
     }
   }, []);
 
-  const loadCollection = async () => {
+  // Use a listener to refresh data without resetting tab state unnecessarily
+  useFocusEffect(
+    useCallback(() => {
+      const token = getToken();
+      if (token) {
+        // Just refresh the data in the background
+        loadCollection(false); 
+      }
+    }, [])
+  );
+
+  const loadCollection = async (showLoading = true) => {
     try {
-      setIsLoading(true);
-      const data = await collectionService.getByUser();
-      setItems(data);
+      if (showLoading) setIsLoading(true);
+      const [activeData, archivedData] = await Promise.all([
+        collectionService.getByUser('active'),
+        collectionService.getByUser('archived')
+      ]);
+      setItems([...activeData, ...archivedData]);
     } catch (error) {
       console.error("Failed to load collection:", error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
 

@@ -15,8 +15,6 @@ interface ExpiredDashboardProps {
 export default function ExpiredDashboard({ products, onProductPress }: ExpiredDashboardProps) {
   const router = useRouter();
 
-  if (products.length === 0) return null;
-
   return (
     <View className="mb-8">
       <View className="flex-row items-center justify-between px-4 mb-4">
@@ -28,21 +26,29 @@ export default function ExpiredDashboard({ products, onProductPress }: ExpiredDa
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={CARD_WIDTH + SPACING}
-        decelerationRate="fast"
-        snapToAlignment="start"
-        contentContainerStyle={{ paddingHorizontal: SPACING }}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => onProductPress(item)} activeOpacity={0.9}>
-            <ExpiredCard item={item} />
-          </TouchableOpacity>
-        )}
-      />
+      {products.length > 0 ? (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_WIDTH + SPACING}
+          decelerationRate="fast"
+          snapToAlignment="start"
+          contentContainerStyle={{ paddingHorizontal: SPACING }}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => onProductPress(item)} activeOpacity={0.9}>
+              <ExpiredCard item={item} />
+            </TouchableOpacity>
+          )}
+        />
+      ) : (
+        <View className="px-4 py-8 bg-brand-pink-100/10 mx-4 rounded-3xl border border-dashed border-brand-pink-100 items-center">
+          <Text className="text-brand-pink-900/40 text-sm text-center">
+            No products expiring in the next month.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

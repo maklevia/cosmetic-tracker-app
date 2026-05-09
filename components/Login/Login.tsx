@@ -33,16 +33,19 @@ export const Login = () => {
     }
 
     setIsLoading(true);
+    const trimmedEmail = email.trim().toLowerCase();
+    console.log("Attempting login for:", trimmedEmail);
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-      const response = await authService.login({ email: normalizedEmail, password });
+      const response = await authService.login({ email: trimmedEmail, password });
+      console.log("Login response received, saving token...");
       await setToken(response.token);
+      console.log("Token saved, saving user...");
       await setUser(response.user);
       
-      console.log("Logged in successfully:", response.user.name);
+      console.log("User saved, navigating to tabs:", response.user.name);
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.error("Login failed:", error.response?.data || error.message);
+      console.log("Login component handled error:", error.message);
       Alert.alert(
         "Login Failed", 
         error.response?.data?.message || "Something went wrong. Please check your connection."

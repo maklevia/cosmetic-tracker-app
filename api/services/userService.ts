@@ -27,6 +27,11 @@ const userService = {
     return response.data;
   },
 
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await apiClient.put<{ message: string }>('/users/change-password', { currentPassword, newPassword });
+    return response.data;
+  },
+
   deleteAccount: async (id: number): Promise<void> => {
     await apiClient.delete(`/users/${id}`);
   },

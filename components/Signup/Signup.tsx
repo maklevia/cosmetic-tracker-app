@@ -54,7 +54,7 @@ export const Signup = () => {
       console.log("Registered successfully:", response.user.name);
       router.replace("/(tabs)");
     } catch (error: any) {
-      console.error("Signup failed:", error.response?.data || error.message);
+      console.log("Signup component handled error:", error.response?.data || error.message);
       Alert.alert(
         "Signup Failed", 
         error.response?.data?.message || "Something went wrong. Please check your connection."

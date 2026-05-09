@@ -24,13 +24,40 @@ export const CollectionCard = ({ item }: { item: CollectionItem }) => {
     });
   };
 
+  const getArchiveStatus = () => {
+    if (item.itemStatus !== 'archived') return null;
+    
+    if (item.archiveReason === 'ran_out') return "Ran out of product";
+    
+    if (item.archiveReason === 'expired') {
+      switch (item.expiryRelation) {
+        case 'before': return "Expired before date";
+        case 'after': return "Expired after date";
+        case 'in_time': return "Expired in time";
+        default: return "Expired";
+      }
+    }
+    return "Archived";
+  };
+
+  const archiveStatus = getArchiveStatus();
+
   return (
     <View className="mb-4 bg-white rounded-2xl overflow-hidden shadow-sm border border-brand-pink-100 flex-row">
-      <Image
-        source={{ uri: imageUrl || "" }}
-        contentFit="cover"
-        style={{ width: 100, height: 100 }}
-      />
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          contentFit="cover"
+          style={{ width: 100, height: 100 }}
+        />
+      ) : (
+        <View 
+          style={{ width: 100, height: 100 }} 
+          className="bg-brand-pink-100/20 items-center justify-center border-r border-brand-pink-100"
+        >
+          <Ionicons name="camera-outline" size={32} color="#83184340" />
+        </View>
+      )}
       
       <View className="flex-1 p-3 justify-between">
         <View>
@@ -48,6 +75,11 @@ export const CollectionCard = ({ item }: { item: CollectionItem }) => {
           {expirationDate && (
             <Text className="text-[10px] text-brand-pink-900/60 mt-0.5">
               Exp: {expirationDate}
+            </Text>
+          )}
+          {archiveStatus && (
+            <Text className="text-[10px] text-rose-500 font-bold mt-1">
+              {archiveStatus}
             </Text>
           )}
         </View>

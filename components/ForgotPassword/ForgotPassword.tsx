@@ -45,11 +45,14 @@ export const ForgotPassword = () => {
         [{ text: "OK", onPress: () => router.replace("/login") }]
       );
     } catch (error: any) {
-      console.error("Reset failed:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to reset password");
+      console.log("Reset component handled error:", error.message);
+      Alert.alert(
+        "Error", error.response?.data?.message || "Failed to reset password"
+      );
     } finally {
       setIsLoading(false);
     }
+
   };
 
   return (

@@ -1,5 +1,5 @@
-import React from "react";
-import { View, ScrollView, Alert } from "react-native";
+import React, { useEffect } from "react";
+import { View, ScrollView, Alert, Text } from "react-native";
 import { ItemDetailsHeader } from "./components/Header";
 import { ProductImage } from "./components/ProductImage";
 import { ProductInfo } from "./components/ProductInfo";
@@ -7,13 +7,14 @@ import { ProductDates } from "./components/ProductDates";
 import { ProductDescription } from "./components/ProductDescription";
 import { ProductReview } from "./components/ProductReview";
 import { EditButton } from "./components/EditButton";
-import { ProductActions } from "./components/ProductActions";
+import { ProductActions, ArchiveReason, ExpiryRelation } from "./components/ProductActions";
 import { useRouter } from "expo-router";
 import { Product } from "@/api/services/productService";
 import collectionService, { CollectionItem } from "@/api/services/collectionService";
 import { calculateExpirationDate, formatDate } from "@/utils/date";
 import { getDisplayData } from "@/utils/display";
 import { getFullImageUrl } from "@/api/apiClient";
+import { getUser } from "@/utils/storage";
 
 interface ItemDetailsProps {
   product: Product;
@@ -23,6 +24,34 @@ interface ItemDetailsProps {
 export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
   const router = useRouter();
   const isArchived = collectionItem?.itemStatus === 'archived';
+  const currentUser = getUser();
+  
+  const userReview = product.reviews?.find(r => r.userId === currentUser?.id);
+
+  // Expiration Logic
+  const isExpired = (() => {
+    if (!collectionItem?.openedDate || !collectionItem?.pao) return false;
+    const opened = new Date(collectionItem.openedDate);
+    const expires = new Date(opened);
+    expires.setMonth(expires.getMonth() + collectionItem.pao);
+    return expires < new Date();
+  })();
+
+  useEffect(() => {
+    if (isExpired && !isArchived) {
+      Alert.alert(
+        "Product Expired!",
+        `It looks like your ${product.title} has reached its recommended shelf life. What would you like to do?`,
+        [
+          { text: "Continue Using", style: "cancel" },
+          { 
+            text: "Archive Product", 
+            onPress: () => handleArchive('expired', 'after') 
+          }
+        ]
+      );
+    }
+  }, []);
 
   const displayData = collectionItem ? getDisplayData(collectionItem) : {
     title: product.title,
@@ -40,12 +69,13 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
     });
   };
 
-  const handleArchive = async (reason: string) => {
+  const handleArchive = async (reason: ArchiveReason, relation?: ExpiryRelation) => {
     if (!collectionItem) return;
     try {
       await collectionService.update(collectionItem.id, { 
-        itemStatus: 'archived', 
-        notes: reason 
+        itemStatus: 'archived',
+        archiveReason: reason,
+        expiryRelation: relation
       });
       Alert.alert("Success", "Product archived");
       router.replace("/(tabs)/allProducts");
@@ -58,7 +88,11 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
   const handleUnarchive = async () => {
     if (!collectionItem) return;
     try {
-      await collectionService.update(collectionItem.id, { itemStatus: 'active' });
+      await collectionService.update(collectionItem.id, { 
+        itemStatus: 'active',
+        archiveReason: null,
+        expiryRelation: null
+      });
       Alert.alert("Success", "Product moved to active collection");
       router.replace("/(tabs)/allProducts");
     } catch (error) {
@@ -91,9 +125,26 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
     );
   };
 
+  const getArchiveText = () => {
+    if (!collectionItem || collectionItem.itemStatus !== 'archived') return null;
+    if (collectionItem.archiveReason === 'ran_out') return "Reason: Ran out of product";
+    if (collectionItem.archiveReason === 'expired') {
+      const relationMap = {
+        'in_time': 'in time',
+        'before': 'before estimated date',
+        'after': 'after estimated date'
+      };
+      const relation = collectionItem.expiryRelation ? relationMap[collectionItem.expiryRelation] : '';
+      return `Reason: Expired ${relation}`;
+    }
+    return null;
+  };
+
+  const archiveText = getArchiveText();
+
   return (
     <View className="flex-1 bg-brand-pink-50">
-      <ItemDetailsHeader isArchived={isArchived} />
+      <ItemDetailsHeader isArchived={isArchived} isExpired={isExpired} />
       
       <ScrollView 
         className="flex-1" 
@@ -105,6 +156,14 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
         <View>
           <ProductInfo brand={displayData.brand} title={displayData.title} />
           
+          {archiveText && (
+            <View className="bg-rose-100/50 p-3 rounded-xl mt-4 border border-rose-200">
+              <Text className="text-rose-600 font-bold text-sm text-center">
+                {archiveText}
+              </Text>
+            </View>
+          )}
+
           <ProductDates 
             openedDate={formatDate(collectionItem?.openedDate) || undefined} 
             expirationDate={calculateExpirationDate(collectionItem?.openedDate, collectionItem?.pao) || undefined} 
@@ -112,7 +171,10 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
 
           <ProductDescription description={displayData.description} />
           
-          <ProductReview review={undefined} /> 
+          <ProductReview review={userReview ? { 
+            stars: userReview.scoreReview, 
+            text: userReview.textReview 
+          } : undefined} /> 
           
           <View className="mt-10">
             {collectionItem && <EditButton onPress={handleEditPress} />}

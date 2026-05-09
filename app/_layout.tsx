@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getToken, initStorage } from "@/utils/storage";
 
 export default function RootLayout() {
@@ -9,6 +9,7 @@ export default function RootLayout() {
   const router = useRouter();
   const navigationState = useRootNavigationState();
   const [isStorageReady, setIsStorageReady] = useState(false);
+  const lastRedirect = useRef<string | null>(null);
 
   // 1. Initialize storage from device
   useEffect(() => {
@@ -23,22 +24,30 @@ export default function RootLayout() {
     if (!navigationState?.key || !isStorageReady) return;
 
     const token = getToken();
-    const inAuthGroup = segments[0] === "(tabs)" || 
-                        segments[0] === "product-details" || 
-                        segments[0] === "profile" ||
-                        segments[0] === "add-product";
+    const currentRoute = segments[0];
+    const inAuthGroup = currentRoute === "(tabs)" || 
+                        currentRoute === "product-details" || 
+                        currentRoute === "profile" ||
+                        currentRoute === "add-product";
 
-    // Defer the navigation to the next tick to ensure the navigator is fully mounted
+    // Defer the navigation to ensure the navigator is fully mounted
     const timeout = setTimeout(() => {
       if (!token && inAuthGroup) {
-        router.replace("/login");
-      } else if (token && (segments[0] === "login" || segments[0] === "signup" || segments[0] === undefined)) {
-        router.replace("/(tabs)");
+        if (lastRedirect.current !== "login") {
+            lastRedirect.current = "login";
+            router.replace("/login");
+        }
+      } else if (token && (currentRoute === "login" || currentRoute === "signup" || currentRoute === undefined)) {
+        if (lastRedirect.current !== "(tabs)") {
+            lastRedirect.current = "(tabs)";
+            router.replace("/(tabs)");
+        }
       }
     }, 1);
 
     return () => clearTimeout(timeout);
   }, [segments, navigationState?.key, isStorageReady]);
+
 
   return (
     <GluestackUIProvider mode="light">

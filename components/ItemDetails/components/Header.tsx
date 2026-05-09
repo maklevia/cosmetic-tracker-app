@@ -5,9 +5,10 @@ import { useRouter } from "expo-router";
 
 interface ItemDetailsHeaderProps {
   isArchived?: boolean;
+  isExpired?: boolean;
 }
 
-export const ItemDetailsHeader = ({ isArchived }: ItemDetailsHeaderProps) => {
+export const ItemDetailsHeader = ({ isArchived, isExpired }: ItemDetailsHeaderProps) => {
   const router = useRouter();
   
   return (
@@ -19,6 +20,11 @@ export const ItemDetailsHeader = ({ isArchived }: ItemDetailsHeaderProps) => {
         {isArchived && (
           <View className="bg-brand-pink-900 px-2 py-0.5 rounded-md ml-3">
             <Text className="text-white text-[10px] font-bold uppercase">Archived</Text>
+          </View>
+        )}
+        {isExpired && !isArchived && (
+          <View className="bg-rose-500 px-2 py-0.5 rounded-md ml-3">
+            <Text className="text-white text-[10px] font-bold uppercase">Expired</Text>
           </View>
         )}
       </View>

@@ -17,8 +17,14 @@ export default function ProductDetailsScreen() {
       setIsLoading(true);
       if (collectionItemId) {
         // This is a product in the user's collection
-        const collection = await collectionService.getByUser();
-        const found = collection.find(c => c.id === parseInt(collectionItemId as string));
+        // Check both active and archived
+        const [collection, archivedCollection] = await Promise.all([
+          collectionService.getByUser('active'),
+          collectionService.getByUser('archived')
+        ]);
+        const fullCollection = [...collection, ...archivedCollection];
+        
+        const found = fullCollection.find(c => c.id === parseInt(collectionItemId as string));
         if (found) {
           setItem(found);
           setProduct(found.product as any);

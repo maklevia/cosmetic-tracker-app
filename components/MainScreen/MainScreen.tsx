@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { ScrollView, View, ActivityIndicator } from "react-native";
 import GlobalHeader from "../GlobalHeader/GlobalHeader";
 import ExpiredDashboard from "./components/ExpiredDashboard/ExpiredDashboard";
 import TrendingDashboard from "./components/TrendingDashboard/TrendingDashboard";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import collectionService, { CollectionItem } from "@/api/services/collectionService";
 import productService, { Product } from "@/api/services/productService";
 import { getToken } from "@/utils/storage";
@@ -14,30 +14,61 @@ export const MainScreen = () => {
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      loadData();
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const loadData = async () => {
+  const loadData = async (showLoading = true) => {
     try {
-      setIsLoading(true);
-      const [dashboard, products] = await Promise.all([
+      if (showLoading) setIsLoading(true);
+      const [dashboardResponse, products] = await Promise.all([
         collectionService.getDashboard(),
-        productService.getAll() // Assuming this returns some products for trending
+        productService.getAll()
       ]);
-      setExpiringProducts((dashboard as any).soonToExpire || []);
-      setTrendingProducts(products.slice(0, 5)); // Just a sample
+      
+      const allItems = (dashboardResponse as any).soonToExpire || [];
+      
+      const now = new Date();
+      const oneMonthFromNow = new Date();
+      oneMonthFromNow.setDate(now.getDate() + 30);
+
+      const expiringSoon = allItems
+        .filter((item: CollectionItem) => {
+          if (item.itemStatus === 'archived') return false;
+          if (!item.openedDate || !item.pao) return false;
+          
+          const opened = new Date(item.openedDate);
+          const expires = new Date(opened);
+          expires.setMonth(expires.getMonth() + item.pao);
+          
+          return expires <= oneMonthFromNow;
+        })
+        .sort((a: CollectionItem, b: CollectionItem) => {
+          const expA = new Date(a.openedDate!);
+          expA.setMonth(expA.getMonth() + a.pao!);
+          
+          const expB = new Date(b.openedDate!);
+          expB.setMonth(expB.getMonth() + b.pao!);
+          
+          return expA.getTime() - expB.getTime();
+        });
+
+      setExpiringProducts(expiringSoon);
+      setTrendingProducts(products.slice(0, 8));
     } catch (error) {
-      console.error("Failed to load dashboard data:", error);
+      console.log("Failed to load dashboard data:", error);
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const token = getToken();
+      if (token) {
+        // Refresh data every time screen is focused
+        loadData(expiringProducts.length === 0); 
+      } else {
+        setIsLoading(false);
+      }
+    }, [])
+  );
 
   const handleProductPress = (item: CollectionItem | Product) => {
     const productId = 'product' in item ? item.product.id : item.id;

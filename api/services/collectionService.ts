@@ -11,6 +11,8 @@ export interface CollectionItem {
   actualExpirationDate?: string;
   pao?: number;
   itemStatus: 'active' | 'archived';
+  archiveReason?: 'expired' | 'ran_out' | null;
+  expiryRelation?: 'in_time' | 'before' | 'after' | null;
   notes?: string;
   product: {
     id: number;
@@ -31,8 +33,10 @@ export interface CollectionItem {
 }
 
 const collectionService = {
-  getByUser: async (): Promise<CollectionItem[]> => {
-    const response = await apiClient.get<CollectionItem[]>('/collection');
+  getByUser: async (status?: 'active' | 'archived'): Promise<CollectionItem[]> => {
+    const response = await apiClient.get<CollectionItem[]>('/collection', {
+      params: { status }
+    });
     return response.data;
   },
 

@@ -16,7 +16,19 @@ const reviewService = {
   },
 
   create: async (data: { productId: number; rating: number; comment?: string }): Promise<Review> => {
-    const response = await apiClient.post<Review>('/reviews', data);
+    const response = await apiClient.post<Review>('/reviews', {
+      productId: data.productId,
+      scoreReview: data.rating,
+      textReview: data.comment
+    });
+    return response.data;
+  },
+
+  update: async (id: number, data: { rating: number; comment?: string }): Promise<Review> => {
+    const response = await apiClient.put<Review>(`/reviews/${id}`, {
+      scoreReview: data.rating,
+      textReview: data.comment
+    });
     return response.data;
   },
 
