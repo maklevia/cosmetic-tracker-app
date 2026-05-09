@@ -1,18 +1,17 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
+import { Product } from "@/api/services/productService";
+import { getFullImageUrl } from "@/api/apiClient";
 
 interface SearchResultItemProps {
-  item: {
-    id: string;
-    title: string;
-    brand: string;
-    imageUrl: string;
-  };
+  item: Product;
   onPress: () => void;
 }
 
 export const SearchResultItem = ({ item, onPress }: SearchResultItemProps) => {
+  const imageUrl = getFullImageUrl(item.image?.url);
+
   return (
     <TouchableOpacity 
       onPress={onPress}
@@ -20,7 +19,7 @@ export const SearchResultItem = ({ item, onPress }: SearchResultItemProps) => {
       className="bg-white border-b border-brand-pink-100 flex-row items-center p-4"
     >
       <Image
-        source={{ uri: item.imageUrl }}
+        source={{ uri: imageUrl || "" }}
         contentFit="cover"
         style={{ width: 50, height: 50 }}
         className="rounded-xl"

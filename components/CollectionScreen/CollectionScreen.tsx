@@ -1,27 +1,55 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
-import { View, FlatList, useWindowDimensions } from "react-native";
-import { DASHBOARD_DATA, ARCHIVE_DATA } from "../MainScreen/constants";
+import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { View, FlatList, useWindowDimensions, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import { CosmeticCard } from "../MainScreen/typedefs";
 import { CollectionTabHeader } from "./components/CollectionTabHeader";
 import { CollectionTabs } from "./components/CollectionTabs";
 import GlobalHeader from "../GlobalHeader/GlobalHeader";
+import collectionService, { CollectionItem } from "@/api/services/collectionService";
+import { getToken } from "@/utils/storage";
 
 export const CollectionScreen = () => {
   const [activeTab, setActiveTab] = useState(0);
+  const [items, setItems] = useState<CollectionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { width } = useWindowDimensions();
   const flatListRef = useRef<FlatList>(null);
   const router = useRouter();
 
-  const tabs = useMemo(() => [
-    { id: 0, title: "My products", count: DASHBOARD_DATA.length, data: DASHBOARD_DATA },
-    { id: 1, title: "Archived", count: ARCHIVE_DATA.length, data: ARCHIVE_DATA }
-  ], []);
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      loadCollection();
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const handleProductPress = useCallback((product: CosmeticCard) => {
+  const loadCollection = async () => {
+    try {
+      setIsLoading(true);
+      const data = await collectionService.getByUser();
+      setItems(data);
+    } catch (error) {
+      console.error("Failed to load collection:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const tabs = useMemo(() => {
+    const activeItems = items.filter(item => item.itemStatus !== 'archived');
+    const archivedItems = items.filter(item => item.itemStatus === 'archived');
+    
+    return [
+      { id: 0, title: "My products", count: activeItems.length, data: activeItems },
+      { id: 1, title: "Archived", count: archivedItems.length, data: archivedItems }
+    ];
+  }, [items]);
+
+  const handleProductPress = useCallback((item: CollectionItem) => {
     router.push({
       pathname: "/product-details",
-      params: { id: product.id }
+      params: { id: item.productId, collectionItemId: item.id }
     });
   }, [router]);
 
@@ -58,13 +86,19 @@ export const CollectionScreen = () => {
         onTabPress={handleTabPress} 
       />
       
-      <CollectionTabs 
-        tabs={tabs}
-        flatListRef={flatListRef}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        getItemLayout={getItemLayout}
-        onProductPress={handleProductPress}
-      />
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#831843" />
+        </View>
+      ) : (
+        <CollectionTabs 
+          tabs={tabs}
+          flatListRef={flatListRef}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          getItemLayout={getItemLayout}
+          onProductPress={handleProductPress}
+        />
+      )}
     </View>
   );
 };

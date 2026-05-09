@@ -1,38 +1,51 @@
-import React, { useState, useMemo, useRef } from "react";
-import { View, TextInput, FlatList, Text, TouchableOpacity, Pressable, Keyboard, StyleSheet, Dimensions, LayoutChangeEvent } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, TextInput, FlatList, Text, TouchableOpacity, Pressable, Keyboard, StyleSheet, Dimensions, LayoutChangeEvent, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { ALL_PRODUCTS } from "../../MainScreen/constants";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
+import collectionService, { CollectionItem } from "@/api/services/collectionService";
+import { getFullImageUrl } from "@/api/apiClient";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const SearchBar = () => {
   const [query, setQuery] = useState("");
   const [isActive, setIsActive] = useState(false);
+  const [results, setResults] = useState<CollectionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [xOffset, setXOffset] = useState(0); 
   const router = useRouter();
   const searchInputRef = useRef<View>(null);
 
-  const results = useMemo(() => {
-    if (!query) return [];
-    const filtered = ALL_PRODUCTS.filter(item => 
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.brand?.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    return [...filtered].sort((a, b) => {
-      if (a.isArchived && !b.isArchived) return 1;
-      if (!a.isArchived && b.isArchived) return -1;
-      return 0;
-    });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.trim().length > 1) {
+        performSearch();
+      } else {
+        setResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelect = (id: string) => {
+  const performSearch = async () => {
+    try {
+      setIsLoading(true);
+      const data = await collectionService.search(query);
+      setResults(data);
+    } catch (error) {
+      console.error("Collection search failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSelect = (item: CollectionItem) => {
     handleDismiss();
     router.push({
       pathname: "/product-details",
-      params: { id }
+      params: { id: item.productId, collectionItemId: item.id }
     });
   };
 
@@ -107,43 +120,55 @@ export const SearchBar = () => {
             ]} 
             className="bg-white border-x border-b border-brand-pink-100 rounded-b-2xl shadow-2xl overflow-hidden"
           >
+            {isLoading && (
+              <View className="p-4 items-center bg-white border-b border-brand-pink-50">
+                <ActivityIndicator size="small" color="#831843" />
+              </View>
+            )}
             <FlatList
               data={results}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  onPress={() => handleSelect(item.id)}
-                  className="flex-row items-center p-4 border-b border-brand-pink-50"
-                >
-                  <Image
-                    source={{ uri: item.imageUrl }}
-                    contentFit="cover"
-                    style={{ width: 40, height: 40 }}
-                    className="rounded-lg"
-                  />
-                  <View className="ml-4 flex-1">
-                    <View className="flex-row items-center">
-                      <Text className="text-brand-pink-900 font-bold text-sm" numberOfLines={1}>
-                        {item.title}
+              renderItem={({ item }) => {
+                const product = item.product;
+                const imageUrl = getFullImageUrl(product.image?.url);
+                
+                return (
+                  <TouchableOpacity 
+                    onPress={() => handleSelect(item)}
+                    className="flex-row items-center p-4 border-b border-brand-pink-50"
+                  >
+                    <Image
+                      source={{ uri: imageUrl || "" }}
+                      contentFit="cover"
+                      style={{ width: 40, height: 40 }}
+                      className="rounded-lg"
+                    />
+                    <View className="ml-4 flex-1">
+                      <View className="flex-row items-center">
+                        <Text className="text-brand-pink-900 font-bold text-sm" numberOfLines={1}>
+                          {product.title}
+                        </Text>
+                        {item.itemStatus === 'archived' && (
+                          <View className="bg-brand-pink-100 px-1.5 py-0.5 rounded ml-2">
+                            <Text className="text-[7px] font-bold text-brand-pink-900 uppercase">Archived</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-brand-pink-900/50 text-[10px]">
+                        {product.brand}
                       </Text>
-                      {item.isArchived && (
-                        <View className="bg-brand-pink-100 px-1.5 py-0.5 rounded ml-2">
-                          <Text className="text-[7px] font-bold text-brand-pink-900 uppercase">Archived</Text>
-                        </View>
-                      )}
                     </View>
-                    <Text className="text-brand-pink-900/50 text-[10px]">
-                      {item.brand}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={14} color="#83184320" />
-                </TouchableOpacity>
-              )}
+                    <Ionicons name="chevron-forward" size={14} color="#83184320" />
+                  </TouchableOpacity>
+                );
+              }}
               ListEmptyComponent={
-                <View className="p-8 items-center bg-white">
-                  <Text className="text-brand-pink-900/40 text-sm">No results found</Text>
-                </View>
+                !isLoading ? (
+                  <View className="p-8 items-center bg-white">
+                    <Text className="text-brand-pink-900/40 text-sm">No results found</Text>
+                  </View>
+                ) : null
               }
             />
           </View>

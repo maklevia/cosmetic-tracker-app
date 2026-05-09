@@ -1,8 +1,45 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import '@/global.css';
+import { useEffect, useState } from "react";
+import { getToken, initStorage } from "@/utils/storage";
 
 export default function RootLayout() {
+  const segments = useSegments();
+  const router = useRouter();
+  const navigationState = useRootNavigationState();
+  const [isStorageReady, setIsStorageReady] = useState(false);
+
+  // 1. Initialize storage from device
+  useEffect(() => {
+    initStorage().then(() => {
+      setIsStorageReady(true);
+    });
+  }, []);
+
+  // 2. Auth redirection logic
+  useEffect(() => {
+    // Wait for BOTH navigation and storage to be ready
+    if (!navigationState?.key || !isStorageReady) return;
+
+    const token = getToken();
+    const inAuthGroup = segments[0] === "(tabs)" || 
+                        segments[0] === "product-details" || 
+                        segments[0] === "profile" ||
+                        segments[0] === "add-product";
+
+    // Defer the navigation to the next tick to ensure the navigator is fully mounted
+    const timeout = setTimeout(() => {
+      if (!token && inAuthGroup) {
+        router.replace("/login");
+      } else if (token && (segments[0] === "login" || segments[0] === "signup" || segments[0] === undefined)) {
+        router.replace("/(tabs)");
+      }
+    }, 1);
+
+    return () => clearTimeout(timeout);
+  }, [segments, navigationState?.key, isStorageReady]);
+
   return (
     <GluestackUIProvider mode="light">
       <Stack screenOptions={{ headerShown: false }}>
@@ -10,6 +47,7 @@ export default function RootLayout() {
         <Stack.Screen name="signup" options={{ headerShown: false }} />
         <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        {/* ... rest of screens ... */}
         <Stack.Screen 
           name="product-details" 
           options={{ 

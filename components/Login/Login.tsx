@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Center } from "@/components/ui/center";
 import { VStack } from "@/components/ui/vstack";
@@ -10,17 +10,46 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText, FormControlError, FormControlErrorIcon, FormControlErrorText } from "@/components/ui/form-control";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import authService from "@/api/services/authService";
+import { setToken, setUser } from "@/utils/storage";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log("Logging in with:", { email, password });
-    // Navigate to the main app flow
-    router.replace("/(tabs)");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await authService.login({ email: normalizedEmail, password });
+      await setToken(response.token);
+      await setUser(response.user);
+      
+      console.log("Logged in successfully:", response.user.name);
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      console.error("Login failed:", error.response?.data || error.message);
+      Alert.alert(
+        "Login Failed", 
+        error.response?.data?.message || "Something went wrong. Please check your connection."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -99,9 +128,12 @@ export const Login = () => {
             {/* Action Button */}
             <Button 
               onPress={handleLogin}
-              className="bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-4"
+              isDisabled={isLoading}
+              className={`bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-4 ${isLoading ? 'opacity-70' : ''}`}
             >
-              <ButtonText className="text-white font-bold text-lg">Log In</ButtonText>
+              <ButtonText className="text-white font-bold text-lg">
+                {isLoading ? "Logging in..." : "Log In"}
+              </ButtonText>
             </Button>
 
             {/* Footer */}

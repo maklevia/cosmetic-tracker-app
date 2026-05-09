@@ -32,6 +32,12 @@ export const DatePickerField = ({ label, value, onChangeDate }: DatePickerFieldP
   };
 
   const togglePicker = () => {
+    if (!show && !value) {
+      // If opening for the first time and no value exists, 
+      // set it to today immediately so "Done" works without spinning
+      const today = new Date().toISOString().split('T')[0];
+      onChangeDate(today);
+    }
     setShow(!show);
   };
 

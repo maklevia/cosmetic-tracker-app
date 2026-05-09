@@ -1,22 +1,35 @@
 import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, Text } from "react-native";
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import PhotoEditor from "@/components/EditProduct/components/PhotoEditor";
 import InputField from "@/components/EditProduct/components/InputField";
 import DatePickerField from "@/components/EditProduct/components/DatePickerField";
 import PAOSelector from "@/components/EditProduct/components/PAOSelector";
+import { getFullImageUrl } from "@/api/apiClient";
 
 interface ManualAddFormProps {
   onAdd: (data: any) => void;
+  isLoading?: boolean;
+  initialData?: {
+    brand: string;
+    title: string;
+    description: string;
+    imageUrl: string | null;
+  };
 }
 
-export const ManualAddForm = ({ onAdd }: ManualAddFormProps) => {
+export const ManualAddForm = ({ onAdd, isLoading, initialData }: ManualAddFormProps) => {
   const [formData, setFormData] = useState({
-    imageUrl: "https://picsum.photos/400/300?grayscale", // Default placeholder
-    brand: "",
-    title: "",
+    imageUrl: initialData?.imageUrl || null,
+    brand: initialData?.brand || "",
+    title: initialData?.title || "",
+    description: initialData?.description || "",
     openedDate: "",
     pao: "",
   });
+
+  const imageUrl = formData.imageUrl?.startsWith('http') 
+    ? formData.imageUrl 
+    : formData.imageUrl; // local URI is fine as is for PhotoEditor/Image
 
   return (
     <View className="flex-1">
@@ -42,6 +55,14 @@ export const ManualAddForm = ({ onAdd }: ManualAddFormProps) => {
           onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
           placeholder="e.g. Moisturizing Cream"
         />
+
+        <InputField 
+          label="Description" 
+          value={formData.description} 
+          onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+          placeholder="Short description or notes..."
+          multiline={true}
+        />
         
         <DatePickerField 
           label="Opened On" 
@@ -57,9 +78,14 @@ export const ManualAddForm = ({ onAdd }: ManualAddFormProps) => {
         <View className="px-6 mt-12 mb-10">
           <TouchableOpacity 
             onPress={() => onAdd(formData)}
-            className="bg-brand-pink-900 py-4 rounded-2xl items-center shadow-lg shadow-brand-pink-900/20"
+            disabled={isLoading}
+            className={`bg-brand-pink-900 py-4 rounded-2xl items-center shadow-lg shadow-brand-pink-900/20 ${isLoading ? 'opacity-70' : ''}`}
           >
-            <Text className="text-white font-bold text-lg">Add to collection</Text>
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-bold text-lg">Add to collection</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

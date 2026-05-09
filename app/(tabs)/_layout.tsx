@@ -62,13 +62,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="archive"
-        options={{
-          href: null,
-        }}
-      />
     </Tabs>
   );
 }

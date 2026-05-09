@@ -1,29 +1,39 @@
 import React from "react";
-import { FlatList, View } from "react-native";
+import { FlatList, View, TouchableOpacity } from "react-native";
 import { Heading } from "@/components/ui/heading";
-import { DASHBOARD_DATA } from "../../constants";
 import { TrendingCard, CARD_WIDTH } from "./components/TrendingCard";
+import { Product } from "@/api/services/productService";
 
 const SPACING = 16;
 
-export default function TrendingDashboard() {
+interface TrendingDashboardProps {
+  products: Product[];
+  onProductPress: (product: Product) => void;
+}
+
+export default function TrendingDashboard({ products, onProductPress }: TrendingDashboardProps) {
+  if (products.length === 0) return null;
+
   return (
     <View className="mb-8">
       <Heading size="xl" className="mb-4 px-4 text-brand-pink-900">
         Trending among our users
       </Heading>
 
-
       <FlatList
-        data={DASHBOARD_DATA} // Reusing mock data for demonstration
-        keyExtractor={(item) => item.id}
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToInterval={CARD_WIDTH + 12} // 12 is mr-3
         decelerationRate="fast"
         snapToAlignment="start"
         contentContainerStyle={{ paddingHorizontal: SPACING }}
-        renderItem={({ item }) => <TrendingCard item={item} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => onProductPress(item)} activeOpacity={0.9}>
+            <TrendingCard item={item} />
+          </TouchableOpacity>
+        )}
       />
     </View>
   );

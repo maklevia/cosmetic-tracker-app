@@ -1,13 +1,13 @@
 import React from "react";
 import { View, FlatList, TouchableOpacity, useWindowDimensions } from "react-native";
 import { CollectionCard } from "./CollectionCard";
-import { CosmeticCard } from "../../MainScreen/typedefs";
+import { CollectionItem } from "@/api/services/collectionService";
 
 interface TabItem {
   id: number;
   title: string;
   count: number;
-  data: CosmeticCard[];
+  data: CollectionItem[];
 }
 
 interface CollectionTabsProps {
@@ -15,7 +15,7 @@ interface CollectionTabsProps {
   flatListRef: React.RefObject<any>; // Using any for the ref to avoid complex TS generic mismatches
   onMomentumScrollEnd: (event: any) => void;
   getItemLayout: (data: any, index: number) => { length: number; offset: number; index: number };
-  onProductPress: (product: CosmeticCard) => void;
+  onProductPress: (item: CollectionItem) => void;
 }
 
 export const CollectionTabs = ({ 
@@ -45,7 +45,7 @@ export const CollectionTabs = ({
         <View style={{ width }}>
           <FlatList
             data={item.data}
-            keyExtractor={(card) => card.id}
+            keyExtractor={(card) => card.id.toString()}
             renderItem={({ item: card }) => (
               <TouchableOpacity onPress={() => onProductPress(card)} activeOpacity={0.8}>
                 <CollectionCard item={card} />

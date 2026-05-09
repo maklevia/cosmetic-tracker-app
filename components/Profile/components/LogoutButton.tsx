@@ -2,6 +2,7 @@ import React from "react";
 import { TouchableOpacity, Text, View, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { clearAuth } from "@/utils/storage";
 
 export const LogoutButton = () => {
   const router = useRouter();
@@ -12,7 +13,14 @@ export const LogoutButton = () => {
       "Are you sure you want to log out?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Log Out", style: "destructive", onPress: () => router.replace("/login") },
+        { 
+          text: "Log Out", 
+          style: "destructive", 
+          onPress: async () => {
+            await clearAuth();
+            router.replace("/login");
+          } 
+        },
       ]
     );
   };

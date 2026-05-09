@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Center } from "@/components/ui/center";
 import { VStack } from "@/components/ui/vstack";
 import { Heading } from "@/components/ui/heading";
@@ -9,6 +9,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { FormControl, FormControlLabel, FormControlLabelText } from "@/components/ui/form-control";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import authService from "@/api/services/authService";
+import { setToken, setUser } from "@/utils/storage";
 
 export const Signup = () => {
   const [name, setName] = useState("");
@@ -17,12 +19,49 @@ export const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSignup = () => {
-    console.log("Signing up with:", { name, email, password });
-    // Navigate to the main app flow
-    router.replace("/(tabs)");
+  const handleSignup = async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await authService.register({ name: name, email: normalizedEmail, password });
+      await setToken(response.token);
+      await setUser(response.user);
+      
+      console.log("Registered successfully:", response.user.name);
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      console.error("Signup failed:", error.response?.data || error.message);
+      Alert.alert(
+        "Signup Failed", 
+        error.response?.data?.message || "Something went wrong. Please check your connection."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -122,9 +161,12 @@ export const Signup = () => {
             {/* Action Button */}
             <Button 
               onPress={handleSignup}
-              className="bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-4"
+              isDisabled={isLoading}
+              className={`bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-4 ${isLoading ? 'opacity-70' : ''}`}
             >
-              <ButtonText className="text-white font-bold text-lg">Sign Up</ButtonText>
+              <ButtonText className="text-white font-bold text-lg">
+                {isLoading ? "Creating Account..." : "Sign Up"}
+              </ButtonText>
             </Button>
 
             {/* Footer */}

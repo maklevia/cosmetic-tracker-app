@@ -1,15 +1,49 @@
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { DASHBOARD_DATA } from "@/components/MainScreen/constants";
 import EditProduct from "@/components/EditProduct/EditProduct";
+import productService, { Product } from "@/api/services/productService";
+import collectionService, { CollectionItem } from "@/api/services/collectionService";
 
 export default function EditProductScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, collectionItemId } = useLocalSearchParams();
   const router = useRouter();
-  
-  const product = DASHBOARD_DATA.find(p => p.id === id) || 
-                  DASHBOARD_DATA.find(p => `archived-${p.id}` === id);
+  const [item, setItem] = useState<CollectionItem | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, [id, collectionItemId]);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      if (collectionItemId) {
+        const collection = await collectionService.getByUser();
+        const found = collection.find(c => c.id === parseInt(collectionItemId as string));
+        if (found) {
+          setItem(found);
+          setProduct(found.product as any);
+        }
+      } else if (id) {
+        const data = await productService.getById(parseInt(id as string));
+        setProduct(data);
+      }
+    } catch (error) {
+      console.error("Failed to load product for editing:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-brand-pink-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#831843" />
+      </View>
+    );
+  }
 
   if (!product) {
     return (
@@ -22,5 +56,5 @@ export default function EditProductScreen() {
     );
   }
 
-  return <EditProduct product={product} />;
+  return <EditProduct product={product} collectionItem={item} />;
 }

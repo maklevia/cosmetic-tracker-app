@@ -22,6 +22,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import Header from "./components/Header";
+import authService from "@/api/services/authService";
+import { getUser } from "@/utils/storage";
 
 export const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState("");
@@ -31,6 +33,7 @@ export const ChangePassword = () => {
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [errors, setErrors] = useState<{
     old?: string;
@@ -40,12 +43,13 @@ export const ChangePassword = () => {
 
   const router = useRouter();
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     const newErrors: any = {};
-    
-    // Mock validation
-    if (oldPassword !== "password123") { // Mock "correct" old password
-      newErrors.old = "Current password is incorrect";
+    const user = getUser();
+
+    if (!user) {
+      Alert.alert("Error", "User not found");
+      return;
     }
     
     if (newPassword !== confirmPassword) {
@@ -59,11 +63,21 @@ export const ChangePassword = () => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      Alert.alert(
-        "Success", 
-        "Your password has been changed successfully.",
-        [{ text: "OK", onPress: () => router.back() }]
-      );
+      setIsLoading(true);
+      try {
+        await authService.resetPassword(user.email, newPassword);
+        
+        Alert.alert(
+          "Success", 
+          "Your password has been changed successfully.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      } catch (error: any) {
+        console.error("Failed to change password:", error);
+        Alert.alert("Error", error.response?.data?.message || "Failed to change password");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -162,9 +176,12 @@ export const ChangePassword = () => {
 
           <Button 
             onPress={handleChangePassword}
-            className="bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-6"
+            isDisabled={isLoading}
+            className={`bg-brand-pink-900 h-14 rounded-2xl shadow-lg shadow-brand-pink-900/20 mt-6 ${isLoading ? 'opacity-70' : ''}`}
           >
-            <ButtonText className="text-white font-bold text-lg">Change Password</ButtonText>
+            <ButtonText className="text-white font-bold text-lg">
+              {isLoading ? "Changing..." : "Change Password"}
+            </ButtonText>
           </Button>
         </VStack>
       </ScrollView>

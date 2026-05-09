@@ -2,17 +2,36 @@ import React from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import userService from "@/api/services/userService";
+import { getUser, clearAuth } from "@/utils/storage";
 
 export const ProfileSettings = () => {
   const router = useRouter();
 
   const handleDeleteAccount = () => {
+    const user = getUser();
+    if (!user) return;
+
     Alert.alert(
       "Delete Account",
       "Are you sure you want to delete your account? All your data will be permanently removed. This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete Account", style: "destructive", onPress: () => console.log("Deleting account...") },
+        { 
+          text: "Delete Account", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              await userService.deleteAccount(user.id);
+              await clearAuth();
+              router.replace("/login");
+              Alert.alert("Account Deleted", "Your account has been successfully removed.");
+            } catch (error) {
+              console.error("Failed to delete account:", error);
+              Alert.alert("Error", "Failed to delete account. Please try again.");
+            }
+          } 
+        },
       ]
     );
   };

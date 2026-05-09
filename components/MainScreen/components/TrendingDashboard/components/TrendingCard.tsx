@@ -1,19 +1,22 @@
 import React from "react";
 import { View, Text, Dimensions } from "react-native";
 import { Image } from "expo-image";
-import { CosmeticCard } from "../../../typedefs";
+import { Product } from "@/api/services/productService";
+import { getFullImageUrl } from "@/api/apiClient";
 
 const { width } = Dimensions.get("window");
 export const CARD_WIDTH = width * 0.45; // Smaller cards for trending
 
-export const TrendingCard = ({ item }: { item: CosmeticCard }) => {
+export const TrendingCard = ({ item }: { item: Product }) => {
+  const imageUrl = getFullImageUrl(item.image?.url);
+  
   return (
     <View
       style={{ width: CARD_WIDTH }}
       className="mr-3 overflow-hidden rounded-xl bg-white shadow-sm border border-brand-pink-100"
     >
       <Image
-        source={{ uri: item.imageUrl }}
+        source={{ uri: imageUrl || "https://via.placeholder.com/120" }}
         contentFit="cover"
         transition={500}
         style={{ height: 120, width: '100%' }}

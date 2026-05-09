@@ -2,18 +2,20 @@ import React from "react";
 import { FlatList, View, TouchableOpacity, Text } from "react-native";
 import { Heading } from "@/components/ui/heading";
 import { useRouter } from "expo-router";
-import { DASHBOARD_DATA } from "../../constants";
 import { ExpiredCard, CARD_WIDTH } from "./components/ExpiredCard";
-import { CosmeticCard } from "../../typedefs";
+import { CollectionItem } from "@/api/services/collectionService";
 
 const SPACING = 16;
 
 interface ExpiredDashboardProps {
-  onProductPress: (product: CosmeticCard) => void;
+  products: CollectionItem[];
+  onProductPress: (product: CollectionItem) => void;
 }
 
-export default function ExpiredDashboard({ onProductPress }: ExpiredDashboardProps) {
+export default function ExpiredDashboard({ products, onProductPress }: ExpiredDashboardProps) {
   const router = useRouter();
+
+  if (products.length === 0) return null;
 
   return (
     <View className="mb-8">
@@ -27,8 +29,8 @@ export default function ExpiredDashboard({ onProductPress }: ExpiredDashboardPro
       </View>
 
       <FlatList
-        data={DASHBOARD_DATA}
-        keyExtractor={(item) => item.id}
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
         horizontal
         showsHorizontalScrollIndicator={false}
         snapToInterval={CARD_WIDTH + SPACING}
