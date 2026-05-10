@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useFocusEffect } from "expo-router";
 import collectionService, { CollectionItem } from "@/api/services/collectionService";
 import productService, { Product } from "@/api/services/productService";
