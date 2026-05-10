@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import MainScreen from "@/components/MainScreen/MainScreen";
+import { MainScreen } from "@/components/MainScreen/MainScreen";
 
 export default function Index() {
   return (

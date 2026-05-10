@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import ProfileButton from "./components/ProfileButton";
-import SearchBar from "./components/SearchBar";
+import { ProfileButton } from "./components/ProfileButton";
+import { SearchBar } from "./components/SearchBar";
 
 export const GlobalHeader = () => {
   return (
@@ -11,5 +11,3 @@ export const GlobalHeader = () => {
     </View>
   );
 };
-
-export default GlobalHeader;

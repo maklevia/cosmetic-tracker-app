@@ -10,6 +10,7 @@ interface Review {
 
 interface ProductReviewProps {
   review?: Review;
+  showUserName?: boolean;
 }
 
 const StarRating = ({ rating }: { rating: number }) => {
@@ -27,7 +28,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-export const ProductReview = ({ review }: ProductReviewProps) => {
+export const ProductReview = ({ review, showUserName = false }: ProductReviewProps) => {
   return (
     <View className="mt-8">
       <Text className="text-lg font-bold text-brand-pink-900">Your Review</Text>
@@ -35,14 +36,14 @@ export const ProductReview = ({ review }: ProductReviewProps) => {
         <View className="mt-4 bg-white p-5 rounded-3xl border border-brand-pink-100 shadow-sm">
           <View className="flex-row justify-between items-center mb-4">
             <StarRating rating={review.stars} />
-            {review.userName && (
+            {showUserName && (
               <Text className="text-brand-pink-900/40 text-xs font-medium uppercase tracking-widest">
-                {review.userName}
+                {review.userName || "Anonymous"}
               </Text>
             )}
           </View>
           <Text className="text-brand-pink-900/80 text-base leading-6 italic">
-            "{review.text}"
+            {"\""}{review.text}{"\""}
           </Text>
         </View>
       ) : (

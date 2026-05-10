@@ -31,5 +31,3 @@ export const StarRatingPicker = ({ rating, onRatingChange }: StarRatingPickerPro
     </View>
   );
 };
-
-export default StarRatingPicker;

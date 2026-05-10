@@ -43,7 +43,7 @@ export const ProductPreview = ({ product, onAdd, isLoading }: ProductPreviewProp
         <ProductImage imageUrl={imageUrl || ""} />
         <ProductInfo brand={product.brand} title={product.title} />
         
-        {/* Main Action Button moved up */}
+        {/* Main Action Button */}
         <TouchableOpacity 
           onPress={() => onAdd({})}
           disabled={isLoading}
@@ -60,14 +60,42 @@ export const ProductPreview = ({ product, onAdd, isLoading }: ProductPreviewProp
         {product.averageScore > 0 && (
           <View className="mt-12 bg-brand-pink-100/20 p-4 rounded-2xl border border-brand-pink-100">
             <Text className="text-[10px] font-bold text-brand-pink-900/60 uppercase tracking-widest mb-2">
-              Our users' ratings
+              Our users` ratings
             </Text>
             <GlobalStarRating rating={product.averageScore} />
+          </View>
+        )}
+
+        {/* Global Reviews List (Showing User Names) */}
+        {product.reviews && product.reviews.length > 0 && (
+          <View className="mt-10">
+            <Text className="text-lg font-bold text-brand-pink-900 mb-4">User Reviews</Text>
+            {product.reviews.slice(0, 5).map((review) => (
+              <View key={review.id} className="mb-4 bg-white p-4 rounded-2xl border border-brand-pink-100 shadow-sm">
+                <View className="flex-row justify-between items-center mb-2">
+                  <View className="flex-row">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Ionicons
+                        key={star}
+                        name={star <= review.scoreReview ? "star" : "star-outline"}
+                        size={12}
+                        color="#831843"
+                      />
+                    ))}
+                  </View>
+                  {/* USER NAME DISPLAYED HERE AS REQUESTED */}
+                  <Text className="text-brand-pink-900/40 text-[10px] font-bold uppercase tracking-wider">
+                    {(review as any).user?.name || "Anonymous"}
+                  </Text>
+                </View>
+                <Text className="text-brand-pink-900/70 text-sm italic">
+                  {"\""}{review.textReview}{"\""}
+                </Text>
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
     </View>
   );
 };
-
-export default ProductPreview;

@@ -1,113 +1,47 @@
-import React, { useState } from "react";
-import { View, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Text, Alert } from "react-native";
+import React from "react";
+import { View, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import Header from "./components/Header";
-import PhotoEditor from "./components/PhotoEditor";
-import InputField from "./components/InputField";
-import DatePickerField from "./components/DatePickerField";
-import PAOSelector from "./components/PAOSelector";
-import DoneButton from "./components/DoneButton";
+import { PhotoEditor } from "./components/PhotoEditor";
+import { InputField } from "./components/InputField";
+import { DatePickerField } from "./components/DatePickerField";
+import { PAOSelector } from "./components/PAOSelector";
+import { DoneButton } from "./components/DoneButton";
 import { Ionicons } from "@expo/vector-icons";
-import { Product, SourceStatus } from "@/api/services/productService";
-import collectionService, { CollectionItem } from "@/api/services/collectionService";
-import productService from "@/api/services/productService";
-import imageService from "@/api/services/imageService";
-import { getFullImageUrl } from "@/api/apiClient";
-import { getDisplayData } from "@/utils/display";
-import { getUser } from "@/utils/storage";
+import { useEditProduct } from "./hooks/useEditProduct";
+import { EditProductProps } from "./typedefs";
 
-interface EditProductProps {
-  product: Product;
-  collectionItem?: CollectionItem | null;
-}
-
-export const EditProduct = ({ product, collectionItem }: EditProductProps) => {
+export const EditProduct = ({ id, collectionItemId, initialProduct, initialCollectionItem }: EditProductProps) => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const displayData = collectionItem ? getDisplayData(collectionItem) : {
-    title: product.title,
-    brand: product.brand,
-    description: product.description,
-    imageUrl: product.image?.path || product.image?.url || null
-  };
+  const {
+    product,
+    formData,
+    setFormData,
+    isLoading,
+    canEditProduct,
+    userReviewExists,
+    handleSave,
+    handleAddReview
+  } = useEditProduct(id, collectionItemId, initialProduct, initialCollectionItem);
 
-  const [formData, setFormData] = useState({
-    imageUrl: getFullImageUrl(displayData.imageUrl) || "",
-    brand: displayData.brand || "",
-    title: displayData.title,
-    description: displayData.description || "",
-    openedDate: collectionItem?.openedDate || "",
-    pao: collectionItem?.pao?.toString() || "",
-  });
+  if (isLoading && !product) {
+    return (
+      <View className="flex-1 bg-brand-pink-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#831843" />
+      </View>
+    );
+  }
 
-  const handleSave = async () => {
-    // 1. Mandatory Fields Validation
-    if (!formData.title || !formData.brand || !formData.openedDate || !formData.pao) {
-      Alert.alert("Required Fields", "Please fill in Product Name, Brand, Opened Date, and PAO.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      let imageId = undefined;
-      const isNewImage = formData.imageUrl && formData.imageUrl.startsWith('file://');
-      
-      if (isNewImage) {
-        const uploaded = await imageService.upload(formData.imageUrl, 'product');
-        imageId = uploaded.id;
-      }
-
-      // Logic based on Product Source Status
-      if (product.sourceStatus === SourceStatus.ADDED_MANUALLY) {
-        // Edit GLOBAL product record (as user owns it)
-        await productService.update(product.id, {
-          brand: formData.brand,
-          title: formData.title,
-          description: formData.description,
-          imageId: imageId || undefined
-        });
-
-        // Also update collection-specific fields (dates)
-        if (collectionItem) {
-          await collectionService.update(collectionItem.id, {
-            openedDate: formData.openedDate,
-            pao: parseInt(formData.pao),
-          });
-        }
-      } else {
-        // Edit PARSED product record (using user_added overrides)
-        if (collectionItem) {
-          await collectionService.update(collectionItem.id, {
-            userAddedTitle: formData.title !== product.title ? formData.title : null,
-            userAddedDescription: formData.description !== product.description ? formData.description : null,
-            userAddedImageId: imageId || null,
-            openedDate: formData.openedDate,
-            pao: parseInt(formData.pao),
-          });
-        }
-      }
-
-      Alert.alert("Success", "Product updated successfully!");
-      router.back();
-    } catch (error: any) {
-      console.error("Failed to save product:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to save changes");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddReview = () => {
-    router.push({
-      pathname: "/add-review",
-      params: { id: product.id }
-    });
-  };
-
-  const currentUser = getUser();
-  const userReview = product.reviews?.find(r => r.userId === currentUser?.id);
-  const canEditProduct = product.sourceStatus === SourceStatus.ADDED_MANUALLY;
+  if (!product) {
+    return (
+      <View className="flex-1 bg-brand-pink-50 items-center justify-center">
+        <Text className="text-brand-pink-900">Product not found</Text>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
+          <Text className="text-brand-pink-900 font-bold">Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView 
@@ -169,7 +103,7 @@ export const EditProduct = ({ product, collectionItem }: EditProductProps) => {
           <View className="flex-row items-center">
             <Ionicons name="star-outline" size={20} color="#831843" />
             <Text className="text-brand-pink-900 font-bold ml-2">
-              {userReview ? "Edit Review" : "Add Review"}
+              {userReviewExists ? "Edit Review" : "Add Review"}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#83184340" />

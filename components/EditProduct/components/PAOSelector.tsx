@@ -56,5 +56,3 @@ export const PAOSelector = ({ value, onValueChange }: PAOSelectorProps) => {
     </View>
   );
 };
-
-export default PAOSelector;

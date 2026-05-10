@@ -25,5 +25,3 @@ export const ReviewInput = ({ value, onChangeText }: ReviewInputProps) => {
     </View>
   );
 };
-
-export default ReviewInput;

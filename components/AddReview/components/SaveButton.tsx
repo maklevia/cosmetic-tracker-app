@@ -23,5 +23,3 @@ export const SaveButton = ({ onPress, isLoading }: SaveButtonProps) => {
     </View>
   );
 };
-
-export default SaveButton;

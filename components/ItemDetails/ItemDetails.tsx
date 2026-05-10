@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, ScrollView, Alert, Text } from "react-native";
+import React from "react";
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity } from "react-native";
 import { ItemDetailsHeader } from "./components/Header";
 import { ProductImage } from "./components/ProductImage";
 import { ProductInfo } from "./components/ProductInfo";
@@ -7,140 +7,48 @@ import { ProductDates } from "./components/ProductDates";
 import { ProductDescription } from "./components/ProductDescription";
 import { ProductReview } from "./components/ProductReview";
 import { EditButton } from "./components/EditButton";
-import { ProductActions, ArchiveReason, ExpiryRelation } from "./components/ProductActions";
+import { ProductActions } from "./components/ProductActions";
 import { useRouter } from "expo-router";
-import { Product } from "@/api/services/productService";
-import collectionService, { CollectionItem } from "@/api/services/collectionService";
-import { calculateExpirationDate, formatDate } from "@/utils/date";
-import { getDisplayData } from "@/utils/display";
-import { getFullImageUrl } from "@/api/apiClient";
-import { getUser } from "@/utils/storage";
+import { formatDate, calculateExpirationDate } from "@/utils/date";
+import { useItemDetails } from "./hooks/useItemDetails";
+import { ItemDetailsProps } from "./typedefs";
 
-interface ItemDetailsProps {
-  product: Product;
-  collectionItem?: CollectionItem | null;
-}
-
-export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
+export const ItemDetails = ({ id, collectionItemId, initialProduct, initialCollectionItem }: ItemDetailsProps) => {
   const router = useRouter();
-  const isArchived = collectionItem?.itemStatus === 'archived';
-  const currentUser = getUser();
-  
-  const userReview = product.reviews?.find(r => r.userId === currentUser?.id);
+  const {
+    product,
+    collectionItem,
+    isLoading,
+    isArchived,
+    isExpired,
+    userReview,
+    displayData,
+    imageUrl,
+    archiveText,
+    handleEditPress,
+    handleArchive,
+    handleUnarchive,
+    handleDelete
+  } = useItemDetails(id, collectionItemId, initialProduct, initialCollectionItem);
 
-  // Expiration Logic
-  const isExpired = (() => {
-    if (!collectionItem?.openedDate || !collectionItem?.pao) return false;
-    const opened = new Date(collectionItem.openedDate);
-    const expires = new Date(opened);
-    expires.setMonth(expires.getMonth() + collectionItem.pao);
-    return expires < new Date();
-  })();
-
-  useEffect(() => {
-    if (isExpired && !isArchived) {
-      Alert.alert(
-        "Product Expired!",
-        `It looks like your ${product.title} has reached its recommended shelf life. What would you like to do?`,
-        [
-          { text: "Continue Using", style: "cancel" },
-          { 
-            text: "Archive Product", 
-            onPress: () => handleArchive('expired', 'after') 
-          }
-        ]
-      );
-    }
-  }, []);
-
-  const displayData = collectionItem ? getDisplayData(collectionItem) : {
-    title: product.title,
-    brand: product.brand,
-    description: product.description,
-    imageUrl: product.image?.path || product.image?.url || null
-  };
-
-  const imageUrl = getFullImageUrl(displayData.imageUrl);
-
-  const handleEditPress = () => {
-    router.push({
-      pathname: "/edit-product",
-      params: { id: product.id, collectionItemId: collectionItem?.id }
-    });
-  };
-
-  const handleArchive = async (reason: ArchiveReason, relation?: ExpiryRelation) => {
-    if (!collectionItem) return;
-    try {
-      await collectionService.update(collectionItem.id, { 
-        itemStatus: 'archived',
-        archiveReason: reason,
-        expiryRelation: relation
-      });
-      Alert.alert("Success", "Product archived");
-      router.replace("/(tabs)/allProducts");
-    } catch (error) {
-      console.error("Failed to archive:", error);
-      Alert.alert("Error", "Failed to archive product");
-    }
-  };
-
-  const handleUnarchive = async () => {
-    if (!collectionItem) return;
-    try {
-      await collectionService.update(collectionItem.id, { 
-        itemStatus: 'active',
-        archiveReason: null,
-        expiryRelation: null
-      });
-      Alert.alert("Success", "Product moved to active collection");
-      router.replace("/(tabs)/allProducts");
-    } catch (error) {
-      console.error("Failed to unarchive:", error);
-      Alert.alert("Error", "Failed to unarchive product");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!collectionItem) return;
-    Alert.alert(
-      "Delete Product",
-      "Are you sure you want to remove this product from your collection?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Delete", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await collectionService.delete(collectionItem.id);
-              router.replace("/(tabs)/allProducts");
-            } catch (error) {
-              console.error("Failed to delete:", error);
-              Alert.alert("Error", "Failed to delete product");
-            }
-          }
-        }
-      ]
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-brand-pink-50 items-center justify-center">
+        <ActivityIndicator size="large" color="#831843" />
+      </View>
     );
-  };
+  }
 
-  const getArchiveText = () => {
-    if (!collectionItem || collectionItem.itemStatus !== 'archived') return null;
-    if (collectionItem.archiveReason === 'ran_out') return "Reason: Ran out of product";
-    if (collectionItem.archiveReason === 'expired') {
-      const relationMap = {
-        'in_time': 'in time',
-        'before': 'before estimated date',
-        'after': 'after estimated date'
-      };
-      const relation = collectionItem.expiryRelation ? relationMap[collectionItem.expiryRelation] : '';
-      return `Reason: Expired ${relation}`;
-    }
-    return null;
-  };
-
-  const archiveText = getArchiveText();
+  if (!product || !displayData) {
+    return (
+      <View className="flex-1 bg-brand-pink-50 items-center justify-center">
+        <Text className="text-brand-pink-900">Product not found</Text>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
+          <Text className="text-brand-pink-900 font-bold">Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-brand-pink-50">
@@ -151,7 +59,7 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
         showsVerticalScrollIndicator={true}
         contentContainerStyle={{ paddingBottom: 60, paddingHorizontal: 24 }}
       >
-        <ProductImage imageUrl={imageUrl || "https://via.placeholder.com/300"} />
+        <ProductImage imageUrl={imageUrl || ""} />
         
         <View>
           <ProductInfo brand={displayData.brand} title={displayData.title} />
@@ -171,10 +79,7 @@ export const ItemDetails = ({ product, collectionItem }: ItemDetailsProps) => {
 
           <ProductDescription description={displayData.description} />
           
-          <ProductReview review={userReview ? { 
-            stars: userReview.scoreReview, 
-            text: userReview.textReview 
-          } : undefined} /> 
+          <ProductReview review={userReview} /> 
           
           <View className="mt-10">
             {collectionItem && <EditButton onPress={handleEditPress} />}

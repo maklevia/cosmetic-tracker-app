@@ -18,5 +18,3 @@ export const AddReviewHeader = () => {
     </View>
   );
 };
-
-export default AddReviewHeader;

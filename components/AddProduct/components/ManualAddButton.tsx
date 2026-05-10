@@ -19,12 +19,10 @@ export const ManualAddButton = ({ onPress }: ManualAddButtonProps) => {
         </View>
         <View className="ml-4">
           <Text className="text-brand-pink-900 font-bold text-lg">Add manually</Text>
-          <Text className="text-brand-pink-900/50 text-xs">Can't find your product? Add it here.</Text>
+          <Text className="text-brand-pink-900/50 text-xs">Can`t find your product? Add it here.</Text>
         </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#83184340" />
     </TouchableOpacity>
   );
 };
-
-export default ManualAddButton;

@@ -1,68 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, TextInput, FlatList, Text, TouchableOpacity, Pressable, Keyboard, StyleSheet, Dimensions, LayoutChangeEvent, ActivityIndicator } from "react-native";
+import React from "react";
+import { View, TextInput, FlatList, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { Image } from "expo-image";
-import collectionService, { CollectionItem } from "@/api/services/collectionService";
 import { getFullImageUrl } from "@/api/apiClient";
+import { useSearchBar } from "../hooks/useSearchBar";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const SearchBar = () => {
-  const [query, setQuery] = useState("");
-  const [isActive, setIsActive] = useState(false);
-  const [results, setResults] = useState<CollectionItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [xOffset, setXOffset] = useState(0); 
-  const router = useRouter();
-  const searchInputRef = useRef<View>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query.trim().length > 1) {
-        performSearch();
-      } else {
-        setResults([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  const performSearch = async () => {
-    try {
-      setIsLoading(true);
-      const data = await collectionService.search(query);
-      setResults(data);
-    } catch (error) {
-      console.error("Collection search failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSelect = (item: CollectionItem) => {
-    handleDismiss();
-    router.push({
-      pathname: "/product-details",
-      params: { id: item.productId, collectionItemId: item.id }
-    });
-  };
-
-  const handleDismiss = () => {
-    setIsActive(false);
-    setQuery("");
-    Keyboard.dismiss();
-  };
-
-  const onLayout = (event: LayoutChangeEvent) => {
-    searchInputRef.current?.measure((x, y, width, height, pageX, pageY) => {
-        setXOffset(pageX);
-    });
-  };
-
-  // Only show overlay when there is an active search query
-  const showOverlay = isActive && query.length > 0;
+  const {
+    query,
+    setQuery,
+    isActive,
+    setIsActive,
+    results,
+    isLoading,
+    xOffset,
+    searchInputRef,
+    handleSelect,
+    handleDismiss,
+    onLayout,
+    showOverlay
+  } = useSearchBar();
 
   return (
     <View 

@@ -18,5 +18,3 @@ export const ChangePasswordHeader = () => {
     </View>
   );
 };
-
-export default ChangePasswordHeader;

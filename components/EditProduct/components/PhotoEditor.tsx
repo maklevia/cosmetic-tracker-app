@@ -5,7 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 
 interface PhotoEditorProps {
-  image: string;
+  image: string | null;
   onImageChange: (uri: string) => void;
 }
 
@@ -26,15 +26,21 @@ export const PhotoEditor = ({ image, onImageChange }: PhotoEditorProps) => {
   return (
     <View className="items-center mt-6">
       <TouchableOpacity onPress={pickImage} activeOpacity={0.8} style={styles.container}>
-        <Image
-          source={{ uri: image }}
-          contentFit="cover"
-          style={styles.image}
-          className="rounded-3xl"
-        />
+        {image ? (
+          <Image
+            source={{ uri: image }}
+            contentFit="cover"
+            style={styles.image}
+            className="rounded-3xl"
+          />
+        ) : (
+          <View style={styles.image} className="bg-brand-pink-100/10 rounded-3xl items-center justify-center border border-brand-pink-100/20" />
+        )}
         <View style={styles.overlay} className="rounded-3xl">
           <Ionicons name="camera" size={32} color="white" />
-          <Text className="text-white font-bold mt-2">Change Photo</Text>
+          <Text className="text-white font-bold mt-2">
+            {image ? "Change Photo" : "Add Photo"}
+          </Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -57,5 +63,3 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
-
-export default PhotoEditor;

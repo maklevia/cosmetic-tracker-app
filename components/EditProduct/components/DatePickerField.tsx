@@ -78,5 +78,3 @@ export const DatePickerField = ({ label, value, onChangeDate }: DatePickerFieldP
     </View>
   );
 };
-
-export default DatePickerField;

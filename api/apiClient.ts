@@ -8,6 +8,7 @@ import { getToken } from '@/utils/storage';
 export const BASE_URL = 'http://192.168.1.68:3000/api';
 export const FILE_BASE_URL = 'http://192.168.1.68:3000';
 
+// eslint-disable-next-line import/no-named-as-default-member
 const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {

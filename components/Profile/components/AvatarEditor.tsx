@@ -88,5 +88,3 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
 });
-
-export default AvatarEditor;

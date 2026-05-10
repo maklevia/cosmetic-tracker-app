@@ -23,5 +23,3 @@ export const DoneButton = ({ onPress, isLoading }: DoneButtonProps) => {
     </View>
   );
 };
-
-export default DoneButton;

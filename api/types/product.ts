@@ -13,6 +13,7 @@ export interface Product {
   image?: {
     id: number;
     url: string;
+    path?: string;
   };
   reviews?: Array<{
     id: number;

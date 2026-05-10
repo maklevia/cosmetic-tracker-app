@@ -1,119 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { View, FlatList, Text, ActivityIndicator, Alert } from "react-native";
-import AddProductHeader from "./components/AddProductHeader";
-import ManualAddButton from "./components/ManualAddButton";
-import SearchResultItem from "./components/SearchResultItem";
-import ManualAddForm from "./components/ManualAddForm";
-import { useRouter } from "expo-router";
-import productService, { Product, SourceStatus } from "@/api/services/productService";
-import collectionService from "@/api/services/collectionService";
-import imageService from "@/api/services/imageService";
+import React from "react";
+import { View, FlatList, Text, ActivityIndicator } from "react-native";
+import { AddProductHeader } from "./components/AddProductHeader";
+import { ManualAddButton } from "./components/ManualAddButton";
+import { SearchResultItem } from "./components/SearchResultItem";
+import { ManualAddForm } from "./components/ManualAddForm";
 import { getFullImageUrl } from "@/api/apiClient";
-
-enum Step {
-  SEARCH,
-  PRODUCT_DETAILS_FORM,
-  MANUAL_FORM
-}
+import { useAddProduct } from "./hooks/useAddProduct";
+import { Step } from "./typedefs";
 
 export const AddProduct = () => {
-  const [step, setStep] = useState<Step>(Step.SEARCH);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.trim().length > 1) {
-        performSearch();
-      } else {
-        setSearchResults([]);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const performSearch = async () => {
-    try {
-      setIsLoading(true);
-      const results = await productService.search(searchQuery);
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleBack = () => {
-    if (step !== Step.SEARCH) {
-      setStep(Step.SEARCH);
-      setSelectedProduct(null);
-    } else {
-      router.back();
-    }
-  };
-
-  const handleAddToCollection = async (data: any) => {
-    // 1. Mandatory Fields Validation
-    if (!data.title || !data.brand || !data.openedDate || !data.pao) {
-      Alert.alert("Required Fields", "Please fill in Product Name, Brand, Opened Date, and PAO.");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      let productId = selectedProduct?.id;
-
-      // Logic for creating NEW product if manual
-      if (step === Step.MANUAL_FORM) {
-        let imageId = undefined;
-        if (data.imageUrl && data.imageUrl.startsWith('file://')) {
-          const uploaded = await imageService.upload(data.imageUrl, 'product');
-          imageId = uploaded.id;
-        }
-
-        const newProduct = await productService.create({
-          brand: data.brand,
-          title: data.title,
-          description: data.description || "",
-          sourceStatus: SourceStatus.ADDED_MANUALLY,
-          imageId: imageId
-        });
-        productId = newProduct.id;
-      }
-
-      if (!productId) throw new Error("No product ID found");
-
-      // Handle Image for parsed products (if user changed it)
-      let userAddedImageId = undefined;
-      if (step === Step.PRODUCT_DETAILS_FORM && data.imageUrl && data.imageUrl.startsWith('file://')) {
-        const uploaded = await imageService.upload(data.imageUrl, 'product');
-        userAddedImageId = uploaded.id;
-      }
-
-      // Add to collection
-      await collectionService.add({
-        productId: productId,
-        openedDate: data.openedDate,
-        pao: parseInt(data.pao),
-        userAddedTitle: (selectedProduct && data.title !== selectedProduct.title) ? data.title : undefined,
-        userAddedDescription: (selectedProduct && data.description !== selectedProduct.description) ? data.description : undefined,
-        userAddedImageId: userAddedImageId
-      });
-
-      Alert.alert("Success", "Product added to your collection!");
-      router.replace("/(tabs)/allProducts");
-    } catch (error: any) {
-      console.error("Failed to add product:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to add product");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    step,
+    setStep,
+    searchQuery,
+    setSearchQuery,
+    searchResults,
+    selectedProduct,
+    setSelectedProduct,
+    isLoading,
+    handleBack,
+    handleAddToCollection,
+    getTitle
+  } = useAddProduct();
 
   const renderContent = () => {
     switch (step) {
@@ -172,12 +80,6 @@ export const AddProduct = () => {
           </View>
         );
     }
-  };
-
-  const getTitle = () => {
-    if (step === Step.PRODUCT_DETAILS_FORM) return "Product Details";
-    if (step === Step.MANUAL_FORM) return "Add Manually";
-    return "Add Product";
   };
 
   return (

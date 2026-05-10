@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import CollectionScreen from "@/components/CollectionScreen/CollectionScreen";
+import { CollectionScreen } from "@/components/CollectionScreen/CollectionScreen";
 
 export default function AllProductsScreen() {
   return (

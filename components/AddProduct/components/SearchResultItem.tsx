@@ -35,5 +35,3 @@ export const SearchResultItem = ({ item, onPress }: SearchResultItemProps) => {
     </TouchableOpacity>
   );
 };
-
-export default SearchResultItem;

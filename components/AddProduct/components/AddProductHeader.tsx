@@ -43,5 +43,3 @@ export const AddProductHeader = ({ onBack, title, showSearch, searchValue, onSea
     </View>
   );
 };
-
-export default AddProductHeader;

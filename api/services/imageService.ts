@@ -19,7 +19,7 @@ const imageService = {
     });
     formData.append('type', type);
 
-    const response = await apiClient.post<Image>('/images/upload', formData, {
+    const response = await apiClient.post<Image>(`/images/upload?type=${type}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

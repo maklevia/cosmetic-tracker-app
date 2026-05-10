@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
-import PhotoEditor from "@/components/EditProduct/components/PhotoEditor";
-import InputField from "@/components/EditProduct/components/InputField";
-import DatePickerField from "@/components/EditProduct/components/DatePickerField";
-import PAOSelector from "@/components/EditProduct/components/PAOSelector";
-import { getFullImageUrl } from "@/api/apiClient";
+import { PhotoEditor } from "@/components/EditProduct/components/PhotoEditor";
+import { InputField } from "@/components/EditProduct/components/InputField";
+import { DatePickerField } from "@/components/EditProduct/components/DatePickerField";
+import { PAOSelector } from "@/components/EditProduct/components/PAOSelector";
 
 interface ManualAddFormProps {
   onAdd: (data: any) => void;
@@ -26,10 +25,6 @@ export const ManualAddForm = ({ onAdd, isLoading, initialData }: ManualAddFormPr
     openedDate: "",
     pao: "",
   });
-
-  const imageUrl = formData.imageUrl?.startsWith('http') 
-    ? formData.imageUrl 
-    : formData.imageUrl; // local URI is fine as is for PhotoEditor/Image
 
   return (
     <View className="flex-1">
@@ -92,5 +87,3 @@ export const ManualAddForm = ({ onAdd, isLoading, initialData }: ManualAddFormPr
     </View>
   );
 };
-
-export default ManualAddForm;

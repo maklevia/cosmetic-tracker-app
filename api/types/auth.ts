@@ -3,6 +3,11 @@ export interface User {
   name: string;
   email: string;
   avatarUrl?: string;
+  avatar?: {
+    id: number;
+    path: string;
+    url: string;
+  };
   appTheme?: string;
   appLang?: string;
   createdAt: string;
