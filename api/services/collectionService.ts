@@ -40,8 +40,8 @@ const collectionService = {
     return response.data;
   },
 
-  getDashboard: async (): Promise<CollectionItem[]> => {
-    const response = await apiClient.get<CollectionItem[]>('/collection/dashboard');
+  getDashboard: async (): Promise<{ soonToExpire: CollectionItem[] }> => {
+    const response = await apiClient.get<{ soonToExpire: CollectionItem[] }>('/collection/dashboard');
     return response.data;
   },
 

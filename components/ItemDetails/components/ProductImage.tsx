@@ -15,8 +15,9 @@ export const ProductImage = ({ imageUrl }: ProductImageProps) => {
       {!isPlaceholder ? (
         <Image
           source={{ uri: imageUrl }}
-          contentFit="cover"
+          contentFit="contain"
           style={styles.image}
+          className="bg-white"
         />
       ) : (
         <View style={styles.image} className="bg-brand-pink-100/10 items-center justify-center">

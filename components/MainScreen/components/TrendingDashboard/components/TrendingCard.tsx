@@ -3,13 +3,15 @@ import { View, Text, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { Product } from "@/api/services/productService";
 import { getFullImageUrl } from "@/api/apiClient";
+import { getGlobalDisplayData } from "@/utils/display";
 import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 export const CARD_WIDTH = width * 0.45; // Smaller cards for trending
 
 export const TrendingCard = ({ item }: { item: Product }) => {
-  const imageUrl = getFullImageUrl(item.image?.url);
+  const displayData = getGlobalDisplayData(item);
+  const imageUrl = getFullImageUrl(displayData.imageUrl);
   
   return (
     <View
@@ -19,9 +21,10 @@ export const TrendingCard = ({ item }: { item: Product }) => {
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
-          contentFit="cover"
+          contentFit="contain"
           transition={500}
           style={{ height: 120, width: '100%' }}
+          className="bg-white"
         />
       ) : (
         <View 
@@ -33,10 +36,10 @@ export const TrendingCard = ({ item }: { item: Product }) => {
       )}
       <View className="p-3">
         <Text className="text-[10px] font-medium text-brand-pink-900/60 uppercase tracking-wider">
-          {item.brand}
+          {displayData.brand}
         </Text>
         <Text className="mt-0.5 text-sm font-bold text-brand-pink-900" numberOfLines={1}>
-          {item.title}
+          {displayData.title}
         </Text>
       </View>
     </View>

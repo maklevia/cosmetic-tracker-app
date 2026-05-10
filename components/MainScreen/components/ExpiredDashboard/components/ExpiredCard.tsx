@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { CollectionItem } from "@/api/services/collectionService";
 import { getFullImageUrl } from "@/api/apiClient";
 import { calculateExpirationDate } from "@/utils/date";
+import { getDisplayData } from "@/utils/display";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -11,8 +12,8 @@ const { width } = Dimensions.get("window");
 export const CARD_WIDTH = width * 0.7;
 
 export const ExpiredCard = ({ item }: { item: CollectionItem }) => {
-  const product = item.product;
-  const imageUrl = getFullImageUrl(item.customImage?.path || product.image?.path || product.image?.url);
+  const displayData = getDisplayData(item);
+  const imageUrl = getFullImageUrl(displayData.imageUrl);
   const expirationDate = calculateExpirationDate(item.openedDate, item.pao);
 
   return (
@@ -20,27 +21,29 @@ export const ExpiredCard = ({ item }: { item: CollectionItem }) => {
       style={{ width: CARD_WIDTH }}
       className="mr-4 overflow-hidden rounded-2xl bg-white shadow-sm border border-brand-pink-100"
     >
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          contentFit="cover"
-          transition={500}
-          style={{ height: 160, width: '100%' }}
-        />
-      ) : (
-        <View 
-          style={{ height: 160, width: '100%' }} 
-          className="bg-brand-pink-100/10 items-center justify-center border-b border-brand-pink-100"
-        >
-          <Ionicons name="camera-outline" size={48} color="#83184320" />
-        </View>
-      )}
+      <View className="p-4 bg-white border-b border-brand-pink-50">
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            contentFit="contain"
+            transition={500}
+            style={{ height: 120, width: '100%' }}
+          />
+        ) : (
+          <View 
+            style={{ height: 120, width: '100%' }} 
+            className="bg-brand-pink-100/10 items-center justify-center"
+          >
+            <Ionicons name="camera-outline" size={48} color="#83184320" />
+          </View>
+        )}
+      </View>
       <View className="p-4">
         <Text className="text-xs font-medium text-brand-pink-900/60 uppercase tracking-wider">
-          {product.brand}
+          {displayData.brand}
         </Text>
         <Text className="mt-1 text-lg font-bold text-brand-pink-900" numberOfLines={1}>
-          {product.title}
+          {displayData.title}
         </Text>
         {expirationDate && (
           <View className="mt-3 flex-row items-center">

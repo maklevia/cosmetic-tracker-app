@@ -18,7 +18,8 @@ export const EditProduct = ({ id, collectionItemId, initialProduct, initialColle
     formData,
     setFormData,
     isLoading,
-    canEditProduct,
+    canEditGlobalInfo,
+    canEditLocalInfo,
     userReviewExists,
     handleSave,
     handleAddReview
@@ -62,7 +63,7 @@ export const EditProduct = ({ id, collectionItemId, initialProduct, initialColle
         <InputField 
           label="Brand" 
           value={formData.brand} 
-          editable={canEditProduct}
+          editable={canEditGlobalInfo}
           onChangeText={(text) => setFormData(prev => ({ ...prev, brand: text }))}
           placeholder="e.g. CeraVe"
         />
@@ -70,7 +71,7 @@ export const EditProduct = ({ id, collectionItemId, initialProduct, initialColle
         <InputField 
           label="Product Name" 
           value={formData.title} 
-          editable={canEditProduct}
+          editable={canEditLocalInfo}
           onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
           placeholder="e.g. Moisturizing Cream"
         />
@@ -78,7 +79,7 @@ export const EditProduct = ({ id, collectionItemId, initialProduct, initialColle
         <InputField 
           label="Description" 
           value={formData.description} 
-          editable={canEditProduct}
+          editable={canEditLocalInfo}
           onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
           placeholder="Add product description..."
           multiline={true}

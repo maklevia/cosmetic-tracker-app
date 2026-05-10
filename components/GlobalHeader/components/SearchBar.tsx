@@ -3,6 +3,7 @@ import { View, TextInput, FlatList, Text, TouchableOpacity, Pressable, StyleShee
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { getFullImageUrl } from "@/api/apiClient";
+import { getDisplayData } from "@/utils/display";
 import { useSearchBar } from "../hooks/useSearchBar";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -89,24 +90,31 @@ export const SearchBar = () => {
               keyExtractor={(item) => item.id.toString()}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => {
-                const product = item.product;
-                const imageUrl = getFullImageUrl(product.image?.url);
+                const displayData = getDisplayData(item);
+                const imageUrl = getFullImageUrl(displayData.imageUrl);
                 
                 return (
                   <TouchableOpacity 
                     onPress={() => handleSelect(item)}
                     className="flex-row items-center p-4 border-b border-brand-pink-50"
                   >
-                    <Image
-                      source={{ uri: imageUrl || "" }}
-                      contentFit="cover"
-                      style={{ width: 40, height: 40 }}
-                      className="rounded-lg"
-                    />
+                    <View style={{ width: 40, height: 40 }} className="rounded-lg bg-white overflow-hidden border border-brand-pink-100/50">
+                      {imageUrl ? (
+                        <Image
+                          source={{ uri: imageUrl }}
+                          contentFit="contain"
+                          style={{ width: "100%", height: "100%" }}
+                        />
+                      ) : (
+                        <View className="flex-1 items-center justify-center bg-brand-pink-100/10">
+                          <Ionicons name="camera-outline" size={16} color="#83184320" />
+                        </View>
+                      )}
+                    </View>
                     <View className="ml-4 flex-1">
                       <View className="flex-row items-center">
                         <Text className="text-brand-pink-900 font-bold text-sm" numberOfLines={1}>
-                          {product.title}
+                          {displayData.title}
                         </Text>
                         {item.itemStatus === 'archived' && (
                           <View className="bg-brand-pink-100 px-1.5 py-0.5 rounded ml-2">
@@ -115,7 +123,7 @@ export const SearchBar = () => {
                         )}
                       </View>
                       <Text className="text-brand-pink-900/50 text-[10px]">
-                        {product.brand}
+                        {displayData.brand}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={14} color="#83184320" />

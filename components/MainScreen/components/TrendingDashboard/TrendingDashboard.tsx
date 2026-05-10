@@ -8,10 +8,9 @@ const SPACING = 16;
 
 interface TrendingDashboardProps {
   products: Product[];
-  onProductPress: (product: Product) => void;
 }
 
-export default function TrendingDashboard({ products, onProductPress }: TrendingDashboardProps) {
+export default function TrendingDashboard({ products }: TrendingDashboardProps) {
   if (products.length === 0) return null;
 
   return (
@@ -29,11 +28,7 @@ export default function TrendingDashboard({ products, onProductPress }: Trending
         decelerationRate="fast"
         snapToAlignment="start"
         contentContainerStyle={{ paddingHorizontal: SPACING }}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => onProductPress(item)} activeOpacity={0.9}>
-            <TrendingCard item={item} />
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => <TrendingCard item={item} />}
       />
     </View>
   );

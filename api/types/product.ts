@@ -12,8 +12,8 @@ export interface Product {
   averageScore: number;
   image?: {
     id: number;
-    url: string;
-    path?: string;
+    path: string;
+    url?: string;
   };
   reviews?: Array<{
     id: number;

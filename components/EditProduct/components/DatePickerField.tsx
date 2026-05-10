@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Platform } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { formatDate } from "@/utils/date";
 
 interface DatePickerFieldProps {
   label: string;
@@ -53,7 +54,7 @@ export const DatePickerField = ({ label, value, onChangeDate }: DatePickerFieldP
         className="bg-white border border-brand-pink-100 rounded-2xl px-4 py-4 flex-row items-center justify-between"
       >
         <Text className={`font-medium ${value ? 'text-brand-pink-900' : 'text-brand-pink-900/40'}`}>
-          {value || "Select Date"}
+          {formatDate(value) || "Select Date"}
         </Text>
       </TouchableOpacity>
 
@@ -78,3 +79,5 @@ export const DatePickerField = ({ label, value, onChangeDate }: DatePickerFieldP
     </View>
   );
 };
+
+export default DatePickerField;

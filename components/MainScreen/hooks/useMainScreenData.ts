@@ -3,6 +3,7 @@ import { useFocusEffect } from "expo-router";
 import collectionService, { CollectionItem } from "@/api/services/collectionService";
 import productService, { Product } from "@/api/services/productService";
 import { getToken } from "@/utils/storage";
+import { getExpirationDateObject } from "@/utils/date";
 
 export const useMainScreenData = () => {
   const [expiringProducts, setExpiringProducts] = useState<CollectionItem[]>([]);
@@ -19,43 +20,58 @@ export const useMainScreenData = () => {
       isFetching.current = true;
       if (showLoading) setIsLoading(true);
       
-      const [dashboardResponse, products] = await Promise.all([
-        collectionService.getDashboard(),
-        productService.getAll()
-      ]);
+      console.log("Fetching dashboard and trending data...");
+
+      // Fetch separately to avoid one failing the other
+      let dashboardItems: CollectionItem[] = [];
+      let trending: Product[] = [];
+
+      try {
+        const dashResp = await collectionService.getDashboard();
+        console.log("Dashboard Response:", dashResp);
+        dashboardItems = dashResp.soonToExpire || [];
+      } catch (e) {
+        console.error("Dashboard fetch failed:", e);
+      }
+
+      try {
+        trending = await productService.getTrending(5);
+        console.log("Trending Response:", trending);
+      } catch (e) {
+        console.error("Trending fetch failed:", e);
+      }
       
-      const allItems = (dashboardResponse as any).soonToExpire || [];
-
       const now = new Date();
-      const oneMonthFromNow = new Date();
-      oneMonthFromNow.setDate(now.getDate() + 30);
+      now.setHours(0, 0, 0, 0);
+      
+      const oneMonthFromNow = new Date(now);
+      oneMonthFromNow.setMonth(now.getMonth() + 1);
 
-      const expiringSoon = allItems
+      const expiringSoon = dashboardItems
         .filter((item: CollectionItem) => {
           if (item.itemStatus === 'archived') return false;
-          if (!item.openedDate || !item.pao) return false;
+          const expires = getExpirationDateObject(item.openedDate, item.pao);
+          if (!expires) return false;
           
-          const opened = new Date(item.openedDate);
-          const expires = new Date(opened);
-          expires.setMonth(expires.getMonth() + item.pao);
-          
+          // Show items that have already expired OR are expiring in the next month
           return expires <= oneMonthFromNow;
         })
         .sort((a: CollectionItem, b: CollectionItem) => {
-          const expA = new Date(a.openedDate!);
-          expA.setMonth(expA.getMonth() + a.pao!);
+          const expA = getExpirationDateObject(a.openedDate, a.pao);
+          const expB = getExpirationDateObject(b.openedDate, b.pao);
           
-          const expB = new Date(b.openedDate!);
-          expB.setMonth(expB.getMonth() + b.pao!);
+          if (!expA) return 1;
+          if (!expB) return -1;
           
           return expA.getTime() - expB.getTime();
         });
 
+      console.log("Filtered Expiring Soon:", expiringSoon.length);
       setExpiringProducts(expiringSoon);
-      setTrendingProducts(products.slice(0, 8));
+      setTrendingProducts(trending);
       hasInitialLoaded.current = true;
     } catch (error) {
-      console.log("useMainScreenData Error:", error);
+      console.error("Critical error in useMainScreenData:", error);
     } finally {
       setIsLoading(false);
       isFetching.current = false;

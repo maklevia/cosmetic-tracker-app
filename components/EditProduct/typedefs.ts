@@ -23,7 +23,8 @@ export interface EditProductHookData {
   formData: EditProductFormData;
   setFormData: React.Dispatch<React.SetStateAction<EditProductFormData>>;
   isLoading: boolean;
-  canEditProduct: boolean;
+  canEditGlobalInfo: boolean;
+  canEditLocalInfo: boolean;
   userReviewExists: boolean;
   handleSave: () => Promise<void>;
   handleAddReview: () => void;

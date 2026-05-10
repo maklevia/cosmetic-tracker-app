@@ -4,7 +4,8 @@ import { AddProductHeader } from "./components/AddProductHeader";
 import { ManualAddButton } from "./components/ManualAddButton";
 import { SearchResultItem } from "./components/SearchResultItem";
 import { ManualAddForm } from "./components/ManualAddForm";
-import { getFullImageUrl } from "@/api/apiClient";
+import { ProductPreview } from "./components/ProductPreview";
+import { CollectionDetailsForm } from "./components/CollectionDetailsForm";
 import { useAddProduct } from "./hooks/useAddProduct";
 import { Step } from "./typedefs";
 
@@ -16,26 +17,27 @@ export const AddProduct = () => {
     setSearchQuery,
     searchResults,
     selectedProduct,
-    setSelectedProduct,
     isLoading,
     handleBack,
     handleAddToCollection,
-    getTitle
+    getTitle,
+    selectProduct
   } = useAddProduct();
 
   const renderContent = () => {
     switch (step) {
-      case Step.PRODUCT_DETAILS_FORM:
+      case Step.GLOBAL_PREVIEW:
         return selectedProduct && (
-          <ManualAddForm 
+          <ProductPreview 
+            product={selectedProduct} 
+            onContinue={() => setStep(Step.COLLECTION_DETAILS_FORM)} 
+          />
+        );
+      case Step.COLLECTION_DETAILS_FORM:
+        return (
+          <CollectionDetailsForm 
             onAdd={handleAddToCollection} 
-            isLoading={isLoading}
-            initialData={{
-              brand: selectedProduct.brand,
-              title: selectedProduct.title,
-              description: selectedProduct.description,
-              imageUrl: getFullImageUrl(selectedProduct.image?.path || selectedProduct.image?.url)
-            }}
+            isLoading={isLoading} 
           />
         );
       case Step.MANUAL_FORM:
@@ -57,10 +59,7 @@ export const AddProduct = () => {
               renderItem={({ item }) => (
                 <SearchResultItem 
                   item={item} 
-                  onPress={() => {
-                    setSelectedProduct(item);
-                    setStep(Step.PRODUCT_DETAILS_FORM);
-                  }} 
+                  onPress={() => selectProduct(item)} 
                 />
               )}
               ListEmptyComponent={

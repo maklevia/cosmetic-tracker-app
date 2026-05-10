@@ -42,7 +42,7 @@ export const MainScreen = () => {
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
       >
         <ExpiredDashboard products={expiringProducts} onProductPress={handleProductPress} />
-        <TrendingDashboard products={trendingProducts} onProductPress={handleProductPress} />
+        <TrendingDashboard products={trendingProducts} />
       </ScrollView>
     </View>
   );

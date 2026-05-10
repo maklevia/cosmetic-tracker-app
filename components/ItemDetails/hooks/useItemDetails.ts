@@ -6,6 +6,7 @@ import collectionService, { CollectionItem } from "@/api/services/collectionServ
 import { getDisplayData } from "@/utils/display";
 import { getFullImageUrl } from "@/api/apiClient";
 import { getUser } from "@/utils/storage";
+import { formatDate, calculateExpirationDate, getExpirationDateObject } from "@/utils/date";
 import { ArchiveReason, ExpiryRelation } from "../components/ProductActions";
 import { ItemDetailsHookData } from "../typedefs";
 
@@ -62,10 +63,8 @@ export const useItemDetails = (
   }, [product?.reviews, currentUser?.id]);
 
   const isExpired = useMemo(() => {
-    if (!collectionItem?.openedDate || !collectionItem?.pao) return false;
-    const opened = new Date(collectionItem.openedDate);
-    const expires = new Date(opened);
-    expires.setMonth(expires.getMonth() + collectionItem.pao);
+    const expires = getExpirationDateObject(collectionItem?.openedDate, collectionItem?.pao);
+    if (!expires) return false;
     return expires < new Date();
   }, [collectionItem]);
 

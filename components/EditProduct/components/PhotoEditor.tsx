@@ -29,9 +29,9 @@ export const PhotoEditor = ({ image, onImageChange }: PhotoEditorProps) => {
         {image ? (
           <Image
             source={{ uri: image }}
-            contentFit="cover"
+            contentFit="contain"
             style={styles.image}
-            className="rounded-3xl"
+            className="rounded-3xl bg-white"
           />
         ) : (
           <View style={styles.image} className="bg-brand-pink-100/10 rounded-3xl items-center justify-center border border-brand-pink-100/20" />

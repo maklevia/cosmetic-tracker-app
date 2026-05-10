@@ -47,8 +47,9 @@ export const CollectionCard = ({ item }: { item: CollectionItem }) => {
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
-          contentFit="cover"
+          contentFit="contain"
           style={{ width: 100, height: 100 }}
+          className="bg-white"
         />
       ) : (
         <View 

@@ -1,5 +1,6 @@
 import React from "react";
-import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import { View, ScrollView, TouchableOpacity, Text } from "react-native";
+import { Image } from "expo-image";
 import { ProductImage } from "@/components/ItemDetails/components/ProductImage";
 import { ProductInfo } from "@/components/ItemDetails/components/ProductInfo";
 import { Product } from "@/api/services/productService";
@@ -8,30 +9,26 @@ import { getFullImageUrl } from "@/api/apiClient";
 
 interface ProductPreviewProps {
   product: Product;
-  onAdd: (data: any) => void;
-  isLoading?: boolean;
+  onContinue: () => void;
 }
 
-const GlobalStarRating = ({ rating }: { rating: number }) => {
+const StarRating = ({ rating }: { rating: number }) => {
   return (
-    <View className="flex-row items-center">
+    <View className="flex-row">
       {[1, 2, 3, 4, 5].map((star) => (
         <Ionicons
           key={star}
           name={star <= Math.round(rating) ? "star" : "star-outline"}
-          size={16}
+          size={12}
           color="#831843"
         />
       ))}
-      <Text className="ml-2 text-brand-pink-900 font-bold text-sm">
-        {rating} / 5
-      </Text>
     </View>
   );
 };
 
-export const ProductPreview = ({ product, onAdd, isLoading }: ProductPreviewProps) => {
-  const imageUrl = getFullImageUrl(product.image?.url);
+export const ProductPreview = ({ product, onContinue }: ProductPreviewProps) => {
+  const imageUrl = getFullImageUrl(product.image?.path);
 
   return (
     <View className="flex-1">
@@ -43,59 +40,54 @@ export const ProductPreview = ({ product, onAdd, isLoading }: ProductPreviewProp
         <ProductImage imageUrl={imageUrl || ""} />
         <ProductInfo brand={product.brand} title={product.title} />
         
-        {/* Main Action Button */}
+        {/* Action Button */}
         <TouchableOpacity 
-          onPress={() => onAdd({})}
-          disabled={isLoading}
-          className={`mt-8 bg-brand-pink-900 py-4 rounded-2xl items-center shadow-lg shadow-brand-pink-900/20 ${isLoading ? 'opacity-70' : ''}`}
+          onPress={onContinue}
+          className="mt-8 bg-brand-pink-900 py-4 rounded-2xl items-center shadow-lg shadow-brand-pink-900/20"
         >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white font-bold text-lg">Add to collection</Text>
-          )}
+          <Text className="text-white font-bold text-lg">Add to collection</Text>
         </TouchableOpacity>
 
-        {/* Our users' ratings Section */}
-        {product.averageScore > 0 && (
-          <View className="mt-12 bg-brand-pink-100/20 p-4 rounded-2xl border border-brand-pink-100">
-            <Text className="text-[10px] font-bold text-brand-pink-900/60 uppercase tracking-widest mb-2">
-              Our users` ratings
-            </Text>
-            <GlobalStarRating rating={product.averageScore} />
-          </View>
-        )}
-
-        {/* Global Reviews List (Showing User Names) */}
+        {/* User Reviews (Last 3) */}
         {product.reviews && product.reviews.length > 0 && (
           <View className="mt-10">
             <Text className="text-lg font-bold text-brand-pink-900 mb-4">User Reviews</Text>
-            {product.reviews.slice(0, 5).map((review) => (
-              <View key={review.id} className="mb-4 bg-white p-4 rounded-2xl border border-brand-pink-100 shadow-sm">
-                <View className="flex-row justify-between items-center mb-2">
-                  <View className="flex-row">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Ionicons
-                        key={star}
-                        name={star <= review.scoreReview ? "star" : "star-outline"}
-                        size={12}
-                        color="#831843"
-                      />
-                    ))}
+            {[...product.reviews]
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .slice(0, 3)
+              .map((review) => (
+                <View key={review.id} className="mb-4 bg-white p-4 rounded-2xl border border-brand-pink-100 shadow-sm">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <View className="flex-row items-center flex-1">
+                      <View className="w-6 h-6 rounded-full bg-brand-pink-100/50 mr-2 overflow-hidden border border-brand-pink-100/50">
+                        {getFullImageUrl((review as any).user?.avatar?.path) ? (
+                          <Image 
+                            source={{ uri: getFullImageUrl((review as any).user?.avatar?.path)! }} 
+                            style={{ width: "100%", height: "100%" }}
+                            contentFit="cover"
+                          />
+                        ) : (
+                          <View className="flex-1 items-center justify-center">
+                            <Ionicons name="person" size={12} color="#83184320" />
+                          </View>
+                        )}
+                      </View>
+                      <Text className="text-brand-pink-900/40 text-[10px] font-bold uppercase tracking-wider" numberOfLines={1}>
+                        {(review as any).user?.name || "Anonymous"}
+                      </Text>
+                    </View>
+                    <StarRating rating={review.scoreReview} />
                   </View>
-                  {/* USER NAME DISPLAYED HERE AS REQUESTED */}
-                  <Text className="text-brand-pink-900/40 text-[10px] font-bold uppercase tracking-wider">
-                    {(review as any).user?.name || "Anonymous"}
+                  <Text className="text-brand-pink-900/70 text-sm italic ml-8">
+                    {"\""}{review.textReview}{"\""}
                   </Text>
                 </View>
-                <Text className="text-brand-pink-900/70 text-sm italic">
-                  {"\""}{review.textReview}{"\""}
-                </Text>
-              </View>
-            ))}
+              ))}
           </View>
         )}
       </ScrollView>
     </View>
   );
 };
+
+export default ProductPreview;

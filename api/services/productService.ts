@@ -9,6 +9,13 @@ const productService = {
     return response.data;
   },
 
+  getTrending: async (limit: number = 10): Promise<Product[]> => {
+    const response = await apiClient.get<Product[]>('/products/trending', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
   getById: async (id: number): Promise<Product> => {
     const response = await apiClient.get<Product>(`/products/${id}`);
     return response.data;

@@ -38,18 +38,34 @@ export const useAddProduct = (): AddProductHookData => {
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
 
+  const selectProduct = useCallback(async (product: Product) => {
+    try {
+      setIsLoading(true);
+      const fullProduct = await productService.getById(product.id);
+      setSelectedProduct(fullProduct);
+      setStep(Step.GLOBAL_PREVIEW);
+    } catch (error) {
+      console.error("Failed to fetch product details:", error);
+      Alert.alert("Error", "Could not load product details.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const handleBack = useCallback(() => {
-    if (step !== Step.SEARCH) {
+    if (step === Step.COLLECTION_DETAILS_FORM && selectedProduct) {
+      setStep(Step.GLOBAL_PREVIEW);
+    } else if (step === Step.GLOBAL_PREVIEW || step === Step.MANUAL_FORM) {
       setStep(Step.SEARCH);
       setSelectedProduct(null);
     } else {
       router.back();
     }
-  }, [step, router]);
+  }, [step, selectedProduct, router]);
 
   const handleAddToCollection = useCallback(async (data: any) => {
-    if (!data.title || !data.brand || !data.openedDate || !data.pao) {
-      Alert.alert("Required Fields", "Please fill in Product Name, Brand, Opened Date, and PAO.");
+    if (!data.openedDate || !data.pao) {
+      Alert.alert("Required Fields", "Please fill in Opened Date and PAO.");
       return;
     }
 
@@ -58,6 +74,12 @@ export const useAddProduct = (): AddProductHookData => {
       let productId = selectedProduct?.id;
 
       if (step === Step.MANUAL_FORM) {
+        if (!data.title || !data.brand) {
+          Alert.alert("Required Fields", "Please fill in Product Name and Brand.");
+          setIsLoading(false);
+          return;
+        }
+
         let imageId = undefined;
         if (data.imageUrl && data.imageUrl.startsWith('file://')) {
           const uploaded = await imageService.upload(data.imageUrl, 'product');
@@ -76,19 +98,11 @@ export const useAddProduct = (): AddProductHookData => {
 
       if (!productId) throw new Error("No product ID found");
 
-      let userAddedImageId = undefined;
-      if (step === Step.PRODUCT_DETAILS_FORM && data.imageUrl && data.imageUrl.startsWith('file://')) {
-        const uploaded = await imageService.upload(data.imageUrl, 'product');
-        userAddedImageId = uploaded.id;
-      }
-
       await collectionService.add({
         productId: productId,
         openedDate: data.openedDate,
         pao: parseInt(data.pao),
-        userAddedTitle: (selectedProduct && data.title !== selectedProduct.title) ? data.title : undefined,
-        userAddedDescription: (selectedProduct && data.description !== selectedProduct.description) ? data.description : undefined,
-        userAddedImageId: userAddedImageId
+        userAddedDescription: step === Step.MANUAL_FORM ? data.description : undefined
       });
 
       Alert.alert("Success", "Product added to your collection!");
@@ -102,7 +116,8 @@ export const useAddProduct = (): AddProductHookData => {
   }, [selectedProduct, step, router]);
 
   const getTitle = useCallback(() => {
-    if (step === Step.PRODUCT_DETAILS_FORM) return "Product Details";
+    if (step === Step.GLOBAL_PREVIEW) return "Product Preview";
+    if (step === Step.COLLECTION_DETAILS_FORM) return "Add to Collection";
     if (step === Step.MANUAL_FORM) return "Add Manually";
     return "Add Product";
   }, [step]);
@@ -115,6 +130,7 @@ export const useAddProduct = (): AddProductHookData => {
     searchResults,
     selectedProduct,
     setSelectedProduct,
+    selectProduct,
     isLoading,
     handleBack,
     handleAddToCollection,

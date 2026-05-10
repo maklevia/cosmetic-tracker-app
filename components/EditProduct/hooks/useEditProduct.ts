@@ -87,7 +87,8 @@ export const useEditProduct = (
     }, [loadData])
   );
 
-  const canEditProduct = useMemo(() => product?.sourceStatus === SourceStatus.ADDED_MANUALLY, [product?.sourceStatus]);
+  const canEditGlobalInfo = useMemo(() => product?.sourceStatus === SourceStatus.ADDED_MANUALLY, [product?.sourceStatus]);
+  const canEditLocalInfo = useMemo(() => !!collectionItem, [collectionItem]);
   const userReviewExists = useMemo(() => !!product?.reviews?.some(r => r.userId === currentUser?.id), [product?.reviews, currentUser?.id]);
 
   const handleSave = useCallback(async () => {
@@ -107,6 +108,7 @@ export const useEditProduct = (
         imageId = uploaded.id;
       }
 
+      // 1. If it's a manual product, update the global product record
       if (product.sourceStatus === SourceStatus.ADDED_MANUALLY) {
         await productService.update(product.id, {
           brand: formData.brand,
@@ -115,13 +117,16 @@ export const useEditProduct = (
           imageId: imageId || undefined
         });
 
+        // And update the collection item mandatory fields
         if (collectionItem) {
           await collectionService.update(collectionItem.id, {
             openedDate: formData.openedDate,
             pao: parseInt(formData.pao),
           });
         }
-      } else {
+      } 
+      // 2. If it's a parsed product, update the user's collection item overrides
+      else {
         if (collectionItem) {
           await collectionService.update(collectionItem.id, {
             userAddedTitle: formData.title !== product.title ? formData.title : null,
@@ -157,7 +162,8 @@ export const useEditProduct = (
     formData,
     setFormData,
     isLoading,
-    canEditProduct,
+    canEditGlobalInfo,
+    canEditLocalInfo,
     userReviewExists,
     handleSave,
     handleAddReview
