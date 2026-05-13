@@ -1,50 +1,49 @@
-# Welcome to your Expo app 👋
+# Cosmetic Tracker (Mobile Application)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📌 Project Overview
+The **Cosmetic Tracker** mobile application is a high-performance cross-platform tool designed to help users monitor the health and safety of their cosmetic products. Built with **React Native** and **Expo**, the app provides a seamless interface for tracking "Period After Opening" (PAO), discovering new products, and managing personal beauty collections.
 
-## Get started
+This application serves as the client-side interface for the Cosmetic Tracker ecosystem, interacting with a dedicated REST API to provide real-time updates and cloud synchronization.
 
-1. Install dependencies
+## 🚀 Technical Stack
+*   **Framework:** React Native (Expo SDK 54)
+*   **Navigation:** Expo Router (File-based routing)
+*   **Styling:** NativeWind (Tailwind CSS for React Native)
+*   **UI Components:** Gluestack UI & Custom Component Library
+*   **Icons:** Lucide Icons & Ionicons
+*   **State Management:** React Hooks & Context API
+*   **Data Fetching:** Axios with dedicated Service Layer
+*   **Imaging:** Expo Image Picker (for profile and product photos)
 
-   ```bash
-   npm install
-   ```
+## 🛠️ Core Features
+*   **Smart Dashboard:** Visual indicators of product status (Archived, Expiring Soon, Expired).
+*   **Discovery Hub:** Browse "Trending Products" based on community popularity.
+*   **Unified Search:** Search across the global product database and personal collection simultaneously.
+*   **Lifecycle Management:** Log product opening dates, set PAO values, and archive items with usage feedback.
+*   **Community Reviews:** Read and write product reviews with star ratings.
+*   **Personalization:** User profile management, including theme selection and language preferences (to be implemented).
 
-2. Start the app
+## 📋 Setup and Installation
 
-   ```bash
-   npx expo start
-   ```
+### 1. Prerequisites
+*   Node.js (v18+)
+*   Expo Go app (on iOS/Android) or a simulator setup.
 
-In the output, you'll find options to open the app in a
+### 2. Environment Configuration
+The app uses an API client located in `api/apiClient.ts`. Ensure your server IP is correctly configured for your local environment (especially when testing on physical devices).
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### 3. Install & Start
 ```bash
-npm run reset-project
+cd cosmetic-tracker-app
+npm install
+npx expo start
 ```
+Scan the QR code with your **Expo Go** app to run the project.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📁 Key Directories
+*   `app/` — Expo Router entry points (screens and layouts).
+*   `components/` — Feature-based UI components (e.g., `MainScreen`, `AddProduct`).
+*   `api/` — API client configuration and service definitions.
+*   `hooks/` — Global and feature-specific custom hooks.
+*   `utils/` — Helper functions for dates, storage, and display formatting.
+*   `assets/` — Static images, fonts, and icons.
